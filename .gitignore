@@ -1,15 +1,34 @@
-# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
 
-# dependencies
+# Dependencies
 node_modules/
+bower_components/
+jspm_packages/
+web_modules/
 
-# Expo
-.expo/
+# Build / Output
+build/
 dist/
+out/
 web-build/
-expo-env.d.ts
+.next
+.nuxt
+.vuepress/dist
+.temp
+.cache
+.parcel-cache
+.docusaurus
+.serverless/
+.fusebox/
+.dynamodb/
+.firebase/
+.svelte-kit/
+**/.vitepress/dist
+**/.vitepress/cache
 
-# Native
+# Expo / React Native
+.expo/
+expo-env.d.ts
+.metro-health-check*
 .kotlin/
 *.orig.*
 *.jks
@@ -18,20 +37,57 @@ expo-env.d.ts
 *.key
 *.mobileprovision
 
-# Metro
-.metro-health-check*
+# Tests / Coverage
+coverage/
+*.lcov
+.nyc_output
+lib-cov
+.grunt
 
-# debug
-npm-debug.*
-yarn-debug.*
-yarn-error.*
+# Logs / Debug
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+# Caches
+.npm
+.eslintcache
+.stylelintcache
+.yarn-integrity
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+# Configs / Metadata
+.lock-wscript
+*.tsbuildinfo
+.yarnrc
+.node_repl_history
+.tern-port
+.vscode-test
+
+# Environment Files
+.env
+.env.*
+!.env.example
+.env*.local
 
 # macOS
 .DS_Store
 *.pem
 
-# local env files
-.env*.local
-
-# typescript
-*.tsbuildinfo
+# Misc
+*.pid
+*.pid.lock
+*.seed
+*.tgz
