@@ -8,8 +8,6 @@ Este repositorio contiene el Frontend del proyecto BusTix en su versión móvil,
 - npm (incluido con Node.js)
 - Expo Go app (para pruebas en dispositivo físico)
 
-> **Nota:** No necesitas instalar Expo CLI globalmente si usas `npx`. El comando `npx` ejecuta paquetes sin necesidad de instalarlos globalmente.
-
 ## 🚀 Instalación
 
 ### Primera vez - Configuración inicial
