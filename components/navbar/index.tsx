@@ -1,0 +1,58 @@
+import React from 'react';
+import { View, Text, Pressable, useWindowDimensions, Platform } from 'react-native';
+import { Bell, X, User } from 'lucide-react-native';
+import type { NavbarProps } from './types';
+import { navbarStyles } from './styles';
+import { Button, ButtonIcon } from '@/components/ui/button';
+import { MenuIcon } from '@/components/ui/icon';
+
+export default function Navbar({ onToggleSidebar, isSidebarOpen }: NavbarProps) {
+  const { width } = useWindowDimensions();
+  const isMobile = width < 768;
+
+  return (
+    <View style={[navbarStyles.container, isMobile && { minHeight: 64 }]}>
+      {/* Botón de menú para móvil */}
+      {isMobile && (
+        <Button 
+          variant="solid" 
+          size={Platform.OS === 'web' ? 'md' : 'lg'}
+          action="secondary" 
+          className={Platform.OS === 'web' ? 'bg-transparent px-2 h-8' : 'bg-transparent px-2'}
+          onPress={onToggleSidebar}
+        >
+          <ButtonIcon 
+            as={isSidebarOpen ? X : MenuIcon} 
+            className={Platform.OS === 'web' ? 'w-6 h-6' : 'w-8 h-8'}
+          />
+        </Button> 
+      )}
+
+      {/* Espacio vacío para desktop */}
+      {!isMobile && <View />}
+
+      {/* Iconos de la derecha */}
+      <View style={navbarStyles.rightIcons}>
+        {/* Notificaciones */}
+        <Pressable
+          style={({ pressed }) => [navbarStyles.notificationButton, pressed && navbarStyles.notificationButtonPressed]}
+        >
+          <Bell size={22} color="#64748b" />
+          {/* Badge de notificaciones */}
+          <View style={navbarStyles.notificationBadge}>
+            <Text style={navbarStyles.notificationBadgeText}>4</Text>
+          </View>
+        </Pressable>
+
+        {/* Usuario */}
+        <Pressable
+          style={({ pressed }) => [navbarStyles.userButton, pressed && navbarStyles.userButtonPressed]}
+        >
+          <View style={navbarStyles.userIcon}>
+            <User size={20} color="#fff" />
+          </View>
+        </Pressable>
+      </View>
+    </View>
+  );
+}

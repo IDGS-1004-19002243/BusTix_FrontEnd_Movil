@@ -1,0 +1,9 @@
+export const NAVBAR_BG = '#fff';
+export const NAVBAR_BORDER = '#e5e7eb';
+export const NAVBAR_MENU_BUTTON = '#f1f5f9';
+export const NAVBAR_MENU_BUTTON_PRESSED = '#e2e8f0';
+export const NAVBAR_NOTIFICATION = '#ef4444';
+export const NAVBAR_USER_BUTTON = '#6366f1';
+export const NAVBAR_USER_BUTTON_PRESSED = '#4f46e5';
+export const NAVBAR_USER_ICON = '#6366f1';
+export const NAVBAR_TEXT = '#334155';
