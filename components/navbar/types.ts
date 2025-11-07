@@ -3,7 +3,7 @@ export interface NavbarProps {
   isSidebarOpen: boolean;
 }
 
-export interface NavbarMenuItemProps {
+ export interface NavbarMenuItemProps {
   icon?: React.ReactNode;
   label: string;
   onPress: () => void;

@@ -1,10 +1,12 @@
 import React from 'react';
 import { View, Text, Pressable, useWindowDimensions, Platform } from 'react-native';
-import { Bell, X, User } from 'lucide-react-native';
+import { Bell, X } from 'lucide-react-native';
 import type { NavbarProps } from './types';
 import { navbarStyles } from './styles';
 import { Button, ButtonIcon } from '@/components/ui/button';
 import { MenuIcon } from '@/components/ui/icon';
+import UserProfile from './user-profile';
+import Notifications from './notifications';
 
 export default function Navbar({ onToggleSidebar, isSidebarOpen }: NavbarProps) {
   const { width } = useWindowDimensions();
@@ -34,24 +36,10 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen }: NavbarProps) 
       {/* Iconos de la derecha */}
       <View style={navbarStyles.rightIcons}>
         {/* Notificaciones */}
-        <Pressable
-          style={({ pressed }) => [navbarStyles.notificationButton, pressed && navbarStyles.notificationButtonPressed]}
-        >
-          <Bell size={22} color="#64748b" />
-          {/* Badge de notificaciones */}
-          <View style={navbarStyles.notificationBadge}>
-            <Text style={navbarStyles.notificationBadgeText}>4</Text>
-          </View>
-        </Pressable>
+        <Notifications />
 
         {/* Usuario */}
-        <Pressable
-          style={({ pressed }) => [navbarStyles.userButton, pressed && navbarStyles.userButtonPressed]}
-        >
-          <View style={navbarStyles.userIcon}>
-            <User size={20} color="#fff" />
-          </View>
-        </Pressable>
+        <UserProfile />
       </View>
     </View>
   );

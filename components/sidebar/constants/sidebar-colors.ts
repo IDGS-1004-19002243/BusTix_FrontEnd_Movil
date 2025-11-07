@@ -1,8 +1,10 @@
 
+import { Platform } from 'react-native';
+
 export const SIDEBAR_COLORS = {
     // general
     bg: '#ffffff',
-    border: '#e9ecee',
+    border: Platform.OS === 'web' ? '#e9ecee' : '#babcbe',
     // labels / text
     labelActive: '#00A76F',
     labelNormal: '#637381',

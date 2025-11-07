@@ -68,8 +68,8 @@ npx expo start --web          # Abre en navegador web
 
 ## 🌐 Tecnologías Utilizadas
 
-- **React Native** - Framework principal
-- **Expo** - Plataforma de desarrollo
+- **React Native** - Framework multiplataforma para desarrollo móvil
+- **Expo** - Framework full-stack construido sobre React Native que simplifica el desarrollo
 - **TypeScript** - Tipado estático
-- **NativeWind** - Estilos con Tailwind CSS
+- **NativeWind** - Estilos con Tailwind CSS para React Native
 - **Expo Router** - Navegación basada en archivos

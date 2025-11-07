@@ -40,7 +40,7 @@ export const navbarStyles = StyleSheet.create({
   rightIcons: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
   },
   notificationButton: {
     position: 'relative',

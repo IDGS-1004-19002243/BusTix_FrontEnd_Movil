@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Pressable, useWindowDimensions, ScrollView, Platform, Text, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ChevronRight, ChevronLeft, ArrowBigLeft, ArrowRight, ArrowRightFromLine, ArrowLeftFromLine } from 'lucide-react-native';
+import {  ArrowRightFromLine, ArrowLeftFromLine } from 'lucide-react-native';
 import { SidebarContent } from './content';
 import { styles as sidebarStyles } from './content/styles';
 import { menuSections } from '../../config/menuData';
@@ -52,7 +52,7 @@ export default function Sidebar({ isOpen = true, onClose, isCollapsed = false, o
             right: 0,
             bottom:insets.bottom,
             backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            zIndex: 998,
+            zIndex: 8,
           }}
         />
       )}
@@ -64,7 +64,7 @@ export default function Sidebar({ isOpen = true, onClose, isCollapsed = false, o
           backgroundColor: SIDEBAR_COLORS.bg,
           borderRightWidth: 0.5,
           borderRightColor: SIDEBAR_COLORS.border,
-          zIndex: isMobile ? 999 : 1000, // Móvil: 999 (sobre overlay 998), Desktop: 1000 (sobre navbar)
+          ...(isMobile && { zIndex: 9 }), // Solo en móvil
           ...(isMobile && {
             position: 'absolute',
             top: insets.top,
@@ -113,7 +113,7 @@ export default function Sidebar({ isOpen = true, onClose, isCollapsed = false, o
               transform: [
                 { translateY: -16 },
               ],
-              zIndex: 999,
+              // zIndex: 11,
             }}>
               <Button
                 variant="solid"

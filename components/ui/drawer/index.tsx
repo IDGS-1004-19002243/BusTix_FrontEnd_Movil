@@ -90,8 +90,8 @@ const drawerContentStyle = tva({
       full: 'w-full',
     },
     anchor: {
-      left: 'h-full border-r',
-      right: 'h-full border-l',
+      left: 'border-r',
+      right: 'border-l',
       top: 'w-full border-b',
       bottom: 'w-full border-t',
     },

@@ -7,3 +7,6 @@ export const NAVBAR_USER_BUTTON = '#6366f1';
 export const NAVBAR_USER_BUTTON_PRESSED = '#4f46e5';
 export const NAVBAR_USER_ICON = '#6366f1';
 export const NAVBAR_TEXT = '#334155';
+export const NAVBAR_BADGE_TEXT = '#ffffff';
+export const NAVBAR_TEXT_SECONDARY = '#4B5563';
+export const NAVBAR_TEXT_TERTIARY = '#9CA3AF';

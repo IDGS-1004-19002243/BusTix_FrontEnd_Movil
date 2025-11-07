@@ -8,6 +8,7 @@ import Navbar from '../../components/navbar';
 export default function PagesLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const { width } = useWindowDimensions();
   const isMobile = width < 768;
   const insets = useSafeAreaInsets();
@@ -24,9 +25,9 @@ export default function PagesLayout() {
     setIsSidebarCollapsed(!isSidebarCollapsed);
   };
 
+ 
   return (
     <View style={{ flex: 1, flexDirection: 'row', paddingTop: insets.top, paddingBottom: insets.bottom }}>
-      {/* Sidebar - siempre visible en desktop, condicional en móvil */}
       <Sidebar 
         isOpen={isMobile ? isSidebarOpen : true} 
         onClose={closeSidebar}
