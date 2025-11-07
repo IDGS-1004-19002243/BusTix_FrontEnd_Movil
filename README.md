@@ -8,8 +8,6 @@ Este repositorio contiene el Frontend del proyecto BusTix en su versión móvil,
 - npm (incluido con Node.js)
 - Expo Go app (para pruebas en dispositivo físico)
 
-> **Nota:** No necesitas instalar Expo CLI globalmente si usas `npx`. El comando `npx` ejecuta paquetes sin necesidad de instalarlos globalmente.
-
 ## 🚀 Instalación
 
 ### Primera vez - Configuración inicial
@@ -71,5 +69,5 @@ npx expo start --web          # Abre en navegador web
 - **React Native** - Framework multiplataforma para desarrollo móvil
 - **Expo** - Framework full-stack construido sobre React Native que simplifica el desarrollo
 - **TypeScript** - Tipado estático
-- **NativeWind** - Estilos con Tailwind CSS para React Native
+- **NativeWind** - Estilos con Tailwind CSS
 - **Expo Router** - Navegación basada en archivos
