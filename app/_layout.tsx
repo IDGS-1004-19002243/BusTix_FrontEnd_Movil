@@ -15,6 +15,8 @@ import { StatusBar } from 'expo-status-bar';
 import { Fab, FabIcon } from '@/components/ui/fab';
 import { MoonIcon, SunIcon } from '@/components/ui/icon';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SessionProvider } from '@/components/auth/contexts/ctx';
+import { SplashScreenController } from '@/components/auth/screens/splash';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -48,12 +50,15 @@ function RootLayoutNav() {
   const [colorMode, setColorMode] = useState<'light' | 'dark'>('light');
 
   return (
-    <SafeAreaProvider>
-      <GluestackUIProvider mode={colorMode}>
-        <ThemeProvider value={colorMode === 'dark' ? DarkTheme : DefaultTheme}>
-          <Slot />
-        </ThemeProvider>
-      </GluestackUIProvider>
-    </SafeAreaProvider>
+    <SessionProvider>
+      <SplashScreenController />
+      <SafeAreaProvider>
+        <GluestackUIProvider mode={colorMode}>
+          <ThemeProvider value={colorMode === 'dark' ? DarkTheme : DefaultTheme}>
+            <Slot />
+          </ThemeProvider>
+        </GluestackUIProvider>
+      </SafeAreaProvider>
+    </SessionProvider>
   );
 }

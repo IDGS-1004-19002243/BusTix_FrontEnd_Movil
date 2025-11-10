@@ -29,11 +29,12 @@ export const menuSections: MenuSection[] = [
         route: '/(pages)/home'
       },
       { 
-        icon: BarChart3, 
-        label: 'Análisis', 
+        icon: Calendar, 
+        label: 'Eventos', 
         active: false, 
-        color: '#6B7280',
-        route: '/(pages)/analysis'
+        color: '#F59E0B', 
+        bgColor: '#FEF3C7',
+        route: '/(pages)/eventos'
       },
     ]
   },

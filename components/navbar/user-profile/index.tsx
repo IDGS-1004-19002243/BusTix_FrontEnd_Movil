@@ -6,6 +6,7 @@ import { Menu, MenuItem, MenuItemLabel, MenuSeparator } from '@/components/ui/me
 import { Image } from '@/components/ui/image';
 import { Badge, BadgeText } from '@/components/ui/badge';
 import { Platform } from 'react-native';
+import { useRouter } from 'expo-router';
 
 // Función para truncar email
 const truncateEmail = (email: string, maxLength: number = 20): string => {
@@ -30,8 +31,8 @@ const getRoleText = (role: string): string => {
 };
 
 const UserProfile = () => {
-  const [openLogoutAlertDialog, setOpenLogoutAlertDialog] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const router = useRouter();
   const userName = "Alexis Duran";
   const userEmail = "duranalexis209@gmail.com";
   const userRole = "Admin"; 
@@ -45,11 +46,6 @@ const UserProfile = () => {
         className="w-[200px]"
         onOpen={() => setIsMenuOpen(true)}
         onClose={() => setIsMenuOpen(false)}
-        onSelectionChange={(e: any) => {
-          if (e.currentKey === "Logout") {
-            setOpenLogoutAlertDialog(true);
-          }
-        }}
         trigger={({ ...triggerProps }) => {
           return (
             <Pressable {...triggerProps}>
@@ -108,6 +104,14 @@ const UserProfile = () => {
         <MenuSeparator />
 
         <MenuItem 
+          key="Profile" 
+          textValue="Profile" 
+          className={Platform.OS === 'web' ? "py-1 px-1" : "p-3"}
+        >
+          <MenuItemLabel size="sm">Profile</MenuItemLabel>
+        </MenuItem>
+
+        <MenuItem 
           key="Document" 
           textValue="Document" 
           className={Platform.OS === 'web' ? "py-1 px-1" : "p-3"}
@@ -115,13 +119,7 @@ const UserProfile = () => {
           <MenuItemLabel size="sm">Document</MenuItemLabel>
         </MenuItem>
 
-        <MenuItem 
-          key="Profile" 
-          textValue="Profile" 
-          className={Platform.OS === 'web' ? "py-1 px-1" : "p-3"}
-        >
-          <MenuItemLabel size="sm">Profile</MenuItemLabel>
-        </MenuItem>
+      
 
         <MenuItem 
           key="Account" 
@@ -137,15 +135,12 @@ const UserProfile = () => {
           key="Logout" 
           textValue="Logout" 
           className={Platform.OS === 'web' ? "py-1 px-1" : "p-3"}
+              onPress={() => router.push('/auth/login')}
+
         >
           <MenuItemLabel size="sm" className="text-warning-500">Logout</MenuItemLabel>
         </MenuItem>
       </Menu>
-      {/* Assuming LogoutAlertDialog is defined elsewhere or can be added */}
-      {/* <LogoutAlertDialog
-        openLogoutAlertDialog={openLogoutAlertDialog}
-        setOpenLogoutAlertDialog={setOpenLogoutAlertDialog}
-      /> */}
     </>
   );
 };
