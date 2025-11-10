@@ -64,7 +64,6 @@ export const SidebarHeader: React.FC<SidebarHeaderProps> = ({
             right: -16,
             top: '50%',
             transform: [{ translateY: -16 }],
-            // zIndex: 11,
           }}
         >
           <Button

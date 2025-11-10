@@ -1,20 +1,23 @@
-
-import React from 'react';
-import { Link, Stack } from 'expo-router';
-import { Text } from '@/components/ui/text';
-import { Center } from '@/components/ui/center';
-import { Button } from '@/components/ui/button';
-import { Image } from 'expo-image';
+import React from "react";
+import { Link, Stack } from "expo-router";
+import { Text } from "@/components/ui/text";
+import { Center } from "@/components/ui/center";
+import { Button } from "@/components/ui/button";
+import { Image } from "expo-image";
 
 export default function NotFoundScreen() {
   return (
     <>
-      <Stack.Screen options={{ title: '¡Ups!' }} />
+      <Stack.Screen options={{ title: "¡Ups!" }} />
       <Center className="flex-1 px-4">
-  <Text className="text-2xl font-bold mb-2 text-center text-black">¡Ups! Página no encontrada</Text>
-  <Text className="text-base text-center mb-4 text-gray-700">La página que buscas no existe o ha sido movida.</Text>
+        <Text className="text-2xl font-bold mb-2 text-center text-black">
+          ¡Ups! Página no encontrada
+        </Text>
+        <Text className="text-base text-center mb-4 text-gray-700">
+          La página que buscas no existe o ha sido movida.
+        </Text>
         <Image
-          source={require('../assets/images/404.png')}
+          source={require("../assets/images/404.png")}
           style={{ width: 220, height: 220, marginBottom: 24 }}
           contentFit="contain"
           accessibilityLabel="404 imagen"

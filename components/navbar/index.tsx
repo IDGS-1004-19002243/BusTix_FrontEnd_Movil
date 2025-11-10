@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, Pressable, useWindowDimensions, Platform } from 'react-native';
-import { Bell, X } from 'lucide-react-native';
 import type { NavbarProps } from './types';
 import { navbarStyles } from './styles';
 import { Button, ButtonIcon } from '@/components/ui/button';
@@ -24,7 +23,7 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen }: NavbarProps) 
           onPress={onToggleSidebar}
         >
           <ButtonIcon 
-            as={isSidebarOpen ? X : MenuIcon} 
+            as={MenuIcon} 
             className={Platform.OS === 'web' ? 'w-6 h-6' : 'w-8 h-8'}
           />
         </Button> 
