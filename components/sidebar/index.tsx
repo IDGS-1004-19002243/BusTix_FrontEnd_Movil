@@ -3,7 +3,6 @@ import { View, useWindowDimensions, Animated } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SIDEBAR_COLORS } from "./constants/sidebar-colors";
 import type { SidebarProps } from "./content/type";
-import { useSidebarAnimation } from './hooks/useSidebarAnimation';
 import { SidebarOverlay } from './overlay/SidebarOverlay';
 import { SidebarHeader } from './parts/SidebarHeader';
 import { SidebarBody } from './parts/SidebarBody'; 
@@ -14,6 +13,7 @@ export default function Sidebar({
   onClose,
   isCollapsed = false,
   onToggleCollapse,
+  slideAnim,
 }: SidebarProps) {
   const [expandedMenus, setExpandedMenus] = useState<{
     [key: string]: boolean;
@@ -23,7 +23,6 @@ export default function Sidebar({
   const insets = useSafeAreaInsets();
   const [isToggleHovered, setIsToggleHovered] = useState(false);
   const sidebarWidth = isMobile ? 230 : isCollapsed ? 90 : 260;
-  const slideAnim = useSidebarAnimation(isOpen, isMobile, sidebarWidth);
 
   const handleTogglePress = () => {
     setIsToggleHovered(false);
