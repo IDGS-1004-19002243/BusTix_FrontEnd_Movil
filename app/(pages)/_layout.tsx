@@ -2,6 +2,7 @@ import { Slot } from 'expo-router';
 import { View, useWindowDimensions, Animated, PanResponder } from 'react-native';
 import { useState, useEffect, useRef } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { usePathname } from 'expo-router';
 import Sidebar from '../../components/sidebar';
 import Navbar from '../../components/navbar';
 
@@ -14,12 +15,19 @@ export default function PagesLayout() {
   const insets = useSafeAreaInsets();
   const sidebarWidth = 230;
   const slideAnim = useRef(new Animated.Value(isMobile ? (isSidebarOpen ? 0 : -sidebarWidth) : 0)).current;
+  const pathname = usePathname();
 
   useEffect(() => {
     if (isMobile) {
       setIsSidebarOpen(false);
     }
   }, [isMobile]);
+
+  useEffect(() => {
+    if (isMobile && isSidebarOpen) {
+      setIsSidebarOpen(false);
+    }
+  }, [pathname]);
 
   useEffect(() => {
     if (isMobile) {
