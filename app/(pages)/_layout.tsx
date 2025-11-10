@@ -1,6 +1,6 @@
 import { Slot } from 'expo-router';
 import { View, useWindowDimensions } from 'react-native';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Sidebar from '../../components/sidebar';
 import Navbar from '../../components/navbar';
@@ -12,6 +12,12 @@ export default function PagesLayout() {
   const { width } = useWindowDimensions();
   const isMobile = width < 768;
   const insets = useSafeAreaInsets();
+
+  useEffect(() => {
+    if (isMobile) {
+      setIsSidebarOpen(false);
+    }
+  }, [isMobile]);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);

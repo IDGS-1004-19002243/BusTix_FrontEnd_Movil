@@ -28,10 +28,10 @@ export const SidebarOverlay: React.FC<SidebarOverlayProps> = ({
         zIndex: 8,
         opacity: slideAnim.interpolate({
           inputRange: [-sidebarWidth, 0],
-          outputRange: [0, 0.5],
+          outputRange: [0, 1],
         }),
+        backgroundColor: 'rgba(0,0,0,0.5)',
       }}
-      className="bg-background-dark"
       pointerEvents={isOpen ? 'auto' : 'none'}
     >
       <Pressable onPress={onClose} style={{ flex: 1 }} />
