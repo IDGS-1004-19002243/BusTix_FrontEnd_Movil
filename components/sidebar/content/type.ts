@@ -1,5 +1,5 @@
 import type { MenuSection } from '@/types/sidebar.types';
-import { Animated } from 'react-native';
+import { Animated, GestureResponderHandlers } from 'react-native';
 
 export interface SidebarProps {
   isOpen?: boolean;
@@ -7,6 +7,7 @@ export interface SidebarProps {
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
   slideAnim: Animated.Value;
+  panHandlers?: GestureResponderHandlers;
 }
 
 export interface SidebarContentProps {

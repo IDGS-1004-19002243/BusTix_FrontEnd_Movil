@@ -14,6 +14,7 @@ export default function Sidebar({
   isCollapsed = false,
   onToggleCollapse,
   slideAnim,
+  panHandlers,
 }: SidebarProps) {
   const [expandedMenus, setExpandedMenus] = useState<{
     [key: string]: boolean;
@@ -73,6 +74,7 @@ export default function Sidebar({
             ],
           }),
         }}
+        {...(panHandlers && isMobile ? panHandlers : {})}
       >
         {/* Header fijo */}
         <SidebarHeader

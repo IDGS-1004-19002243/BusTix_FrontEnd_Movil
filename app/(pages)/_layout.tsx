@@ -33,34 +33,55 @@ export default function PagesLayout() {
     }
   }, [isSidebarOpen, isMobile, slideAnim]);
 
-  const panResponder = PanResponder.create({
+  const contentPanResponder = PanResponder.create({
     onMoveShouldSetPanResponder: (evt, gestureState) => {
       const { pageX } = evt.nativeEvent;
-      return pageX < 100 && Math.abs(gestureState.dx) > 10 && Math.abs(gestureState.dy) < 20;
+      return !isSidebarOpen && pageX < 100 && Math.abs(gestureState.dx) > 10 && Math.abs(gestureState.dy) < 20;
     },
     onPanResponderGrant: () => {
       slideAnim.stopAnimation();
     },
     onPanResponderMove: (evt, gestureState) => {
-      if (isMobile) {
-        let newValue;
-        if (!isSidebarOpen) {
-          newValue = Math.max(-sidebarWidth, Math.min(0, gestureState.dx - sidebarWidth));
-        } else {
-          newValue = Math.max(-sidebarWidth, Math.min(0, gestureState.dx));
-        }
+      if (!isSidebarOpen) {
+        const newValue = Math.max(-sidebarWidth, Math.min(0, gestureState.dx - sidebarWidth));
         slideAnim.setValue(newValue);
       }
     },
     onPanResponderRelease: (evt, gestureState) => {
-      if (isMobile) {
-        if (gestureState.dx > 50 && !isSidebarOpen) {
+      if (!isSidebarOpen) {
+        if (gestureState.dx > 50) {
           setIsSidebarOpen(true);
-        } else if (gestureState.dx < -50 && isSidebarOpen) {
+        } else {
+          Animated.timing(slideAnim, {
+            toValue: -sidebarWidth,
+            duration: 300,
+            useNativeDriver: true,
+          }).start();
+        }
+      }
+    },
+  });
+
+  const sidebarPanResponder = PanResponder.create({
+    onMoveShouldSetPanResponder: (evt, gestureState) => {
+      return isSidebarOpen && Math.abs(gestureState.dx) > 10 && Math.abs(gestureState.dy) < 20;
+    },
+    onPanResponderGrant: () => {
+      slideAnim.stopAnimation();
+    },
+    onPanResponderMove: (evt, gestureState) => {
+      if (isSidebarOpen) {
+        const newValue = Math.max(-sidebarWidth, Math.min(0, gestureState.dx));
+        slideAnim.setValue(newValue);
+      }
+    },
+    onPanResponderRelease: (evt, gestureState) => {
+      if (isSidebarOpen) {
+        if (gestureState.dx < -50) {
           setIsSidebarOpen(false);
         } else {
           Animated.timing(slideAnim, {
-            toValue: isSidebarOpen ? 0 : -sidebarWidth,
+            toValue: 0,
             duration: 300,
             useNativeDriver: true,
           }).start();
@@ -90,6 +111,7 @@ export default function PagesLayout() {
         isCollapsed={!isMobile && isSidebarCollapsed}
         onToggleCollapse={toggleCollapse}
         slideAnim={slideAnim}
+        panHandlers={sidebarPanResponder.panHandlers}
       />
       
       {/* Contenido principal */}
@@ -101,7 +123,7 @@ export default function PagesLayout() {
         />
         
         {/* Contenido de las páginas */}
-        <View style={{ flex: 1, backgroundColor: '#ffffff' }} {...panResponder.panHandlers}>
+        <View style={{ flex: 1, backgroundColor: '#ffffff' }} {...contentPanResponder.panHandlers}>
           <Slot />
         </View>
       </View>
