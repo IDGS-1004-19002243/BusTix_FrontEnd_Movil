@@ -8,6 +8,7 @@ import { Badge, BadgeText } from '@/components/ui/badge';
 import { Button, ButtonText } from '@/components/ui/button';
 import { useRouter } from 'expo-router';
 import { initialEvents, Event } from './eventsData';
+import Seo from '@/components/helpers/Seo';
 
 export default function EventosPage() {
   const { width } = useWindowDimensions();
@@ -39,6 +40,7 @@ export default function EventosPage() {
       style={{ flex: 1 }}
       contentContainerStyle={{ padding: 24 }}
     >
+      <Seo title="Eventos" description="Descubre y reserva entradas para los mejores eventos." />
       <VStack space="lg">
         <Heading size="xl" className="text-center">Eventos Disponibles 🎭</Heading>
         <Text className="text-center text-gray-600 mb-4">

@@ -4,11 +4,19 @@ import { Text } from "@/components/ui/text";
 import { Center } from "@/components/ui/center";
 import { Button } from "@/components/ui/button";
 import { Image } from "expo-image";
+import { Platform } from 'react-native';
+import Seo from '@/components/helpers/Seo';
 
 export default function NotFoundScreen() {
+
+  const Web = Platform.OS === 'web';
+
   return (
     <>
-      <Stack.Screen options={{ title: "¡Ups!" }} />
+      {/* export options arriba para que otros desarrolladores las vean */}
+      <Stack.Screen options={{ title: "¡Ups!", headerShown: !Web }} />
+      {/* Use the Seo helper to set a page-specific title + description */}
+      <Seo title="Página no encontrada" description="La página que buscas no existe o ha sido movida." />
       <Center className="flex-1 px-4">
         <Text className="text-2xl font-bold mb-2 text-center text-black">
           ¡Ups! Página no encontrada

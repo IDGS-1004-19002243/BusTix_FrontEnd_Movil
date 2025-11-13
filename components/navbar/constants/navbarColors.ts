@@ -1,4 +1,4 @@
-export const NAVBAR_BG = '#fff';
+export const NAVBAR_BG = '#FFFFFF';
 export const NAVBAR_BORDER = '#e5e7eb';
 export const NAVBAR_MENU_BUTTON = '#f1f5f9';
 export const NAVBAR_MENU_BUTTON_PRESSED = '#e2e8f0';

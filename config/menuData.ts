@@ -50,8 +50,6 @@ export const menuSections: MenuSection[] = [
         key: 'management',
         submenu: [
           { label: 'Gestión de Usuarios', route: '/(pages)/users' },
-          { label: 'Gestión de Roles', route: '/(pages)/roles' },
-          { label: 'Configuración', route: '/(pages)/settings' }
         ]
       },
       { 

@@ -3,7 +3,7 @@ import { useState } from 'react';
 export const useLogin = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [remember, setRemember] = useState(false);
+  const [remember, setRemember] = useState(true);
   const [usernameInvalid, setUsernameInvalid] = useState(false);
   const [passwordInvalid, setPasswordInvalid] = useState(false);
 
@@ -13,7 +13,6 @@ export const useLogin = () => {
     setUsernameInvalid(isUsernameInvalid);
     setPasswordInvalid(isPasswordInvalid);
     if (!isUsernameInvalid && !isPasswordInvalid) {
-      // Proceed with login
       console.log('Inicio de sesión exitoso');
     }
   };

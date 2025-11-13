@@ -1,4 +1,4 @@
-import { StyleSheet, ViewStyle } from 'react-native';
+import { StyleSheet, ViewStyle, Platform } from 'react-native';
 import { COLORS, SIZES } from '../constants';
 
 export const authStyles = StyleSheet.create({
@@ -46,15 +46,14 @@ export const authStyles = StyleSheet.create({
   },
 });
 
-export const getHeaderStyle = (isMobile: boolean, insets: any): ViewStyle => {
+export const getHeaderStyle = (isMobile: boolean): ViewStyle => {
+
   return isMobile
     ? {
-        padding: SIZES.padding,
-        paddingTop: insets && insets.top ? insets.top + 12 : 28,
-        paddingBottom: SIZES.paddingBottom,
         flexDirection: 'row' as const,
         alignItems: 'center' as const,
         justifyContent: 'center' as const,
+        paddingTop: Platform.OS==='web'? 0:25,
         backgroundColor: 'transparent',
       }
     : {

@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, ScrollView } from 'react-native';
+import Seo from '@/components/helpers/Seo';
 
 export default function SettingsPage() {
   return (
@@ -7,6 +8,7 @@ export default function SettingsPage() {
       style={{ flex: 1 }}
       contentContainerStyle={{ padding: 24 }}
     >
+      <Seo title="Configuración" description="Configura las preferencias de tu cuenta en BusTix." />
       <Text style={{ fontSize: 32, fontWeight: 'bold', marginBottom: 8, color: '#111827' }}>
         Configuración ⚙️
       </Text>

@@ -4,6 +4,7 @@ import { Modal, ModalBackdrop, ModalContent, ModalHeader, ModalBody, ModalFooter
 import { Button, ButtonText } from '@/components/ui/button';
 import { Heading } from '@/components/ui/heading';
 import { VStack } from '@/components/ui/vstack';
+import Seo from '@/components/helpers/Seo';
 import { HStack } from '@/components/ui/hstack';
 import { Card } from '@/components/ui/card';
 import { Badge, BadgeText } from '@/components/ui/badge';
@@ -17,6 +18,7 @@ export default function HomePage() {
 
   return (
     <>
+      <Seo title="Inicio" description="Panel de control de BusTix: eventos, ventas y estadísticas." />
       <ScrollView 
         style={{ flex: 1 }}
         contentContainerStyle={{ padding: 24 }}
@@ -206,3 +208,4 @@ export default function HomePage() {
     </>
   );
 }
+

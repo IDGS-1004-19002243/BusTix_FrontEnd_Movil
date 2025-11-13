@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/form-control';
 import { AlertCircleIcon } from '@/components/ui/icon';
 import { VStack } from '@/components/ui/vstack';
+import { router } from 'expo-router';
 import { useSignUp } from '../hooks/useSignUp';
 import { useSession } from '../contexts/ctx';
 
@@ -24,8 +25,6 @@ export default function SignUpForm({ onSwitchToLogin }: SignUpFormProps) {
   const platform = Platform.OS;
   const isWeb = platform === 'web';
   const inputHeightClass = isWeb ? 'h-8' : 'h-8';
-  const linkTextClass = 'text-xs';
-  const labelTextClass = isWeb ? 'text-sm' : '';
   const signUp = useSignUp();
   const { signIn } = useSession();
 
@@ -38,9 +37,10 @@ export default function SignUpForm({ onSwitchToLogin }: SignUpFormProps) {
 
   return (
     <>
-      <VStack space="sm" className="w-full">
+      <View className="w-full max-w-sm px-6">
+        <VStack space="sm" className="w-full">
               <FormControl isInvalid={signUp.firstNameInvalid} size="sm" isRequired>
-                <Input className={`my-1 ${inputHeightClass}`}>
+                <Input className={`${inputHeightClass}`}>
                   <InputField
                     placeholder="Nombre"
                     value={signUp.firstName}
@@ -58,7 +58,7 @@ export default function SignUpForm({ onSwitchToLogin }: SignUpFormProps) {
                 </FormControlError>
               </FormControl>
               <FormControl size="sm">
-                <Input className={`my-1 ${inputHeightClass}`}>
+                <Input className={`${inputHeightClass}`}>
                   <InputField
                     placeholder="Segundo nombre"
                     value={signUp.middleName}
@@ -67,7 +67,7 @@ export default function SignUpForm({ onSwitchToLogin }: SignUpFormProps) {
                 </Input>
               </FormControl>
               <FormControl isInvalid={signUp.lastNamePInvalid} size="sm" isRequired>
-                <Input className={`my-1 ${inputHeightClass}`}>
+                <Input className={`${inputHeightClass}`}>
                   <InputField
                     placeholder="Apellido paterno"
                     value={signUp.lastNameP}
@@ -85,7 +85,7 @@ export default function SignUpForm({ onSwitchToLogin }: SignUpFormProps) {
                 </FormControlError>
               </FormControl>
               <FormControl size="sm">
-                <Input className={`my-1 ${inputHeightClass}`}>
+                <Input className={`${inputHeightClass}`}>
                   <InputField
                     placeholder="Apellido materno"
                     value={signUp.lastNameM}
@@ -94,7 +94,7 @@ export default function SignUpForm({ onSwitchToLogin }: SignUpFormProps) {
                 </Input>
               </FormControl>
               <FormControl isInvalid={signUp.emailInvalid} size="sm" isRequired>
-                <Input className={`my-1 ${inputHeightClass}`}>
+                <Input className={`${inputHeightClass}`}>
                   <InputField
                     placeholder="Email"
                     value={signUp.email}
@@ -113,7 +113,7 @@ export default function SignUpForm({ onSwitchToLogin }: SignUpFormProps) {
                 </FormControlError>
               </FormControl>
               <FormControl isInvalid={signUp.signUpPasswordInvalid} size="sm" isRequired>
-                <Input className={`my-1 ${inputHeightClass}`}>
+                <Input className={`${inputHeightClass}`}>
                   <InputField
                     placeholder="Contraseña"
                     value={signUp.password}
@@ -132,7 +132,7 @@ export default function SignUpForm({ onSwitchToLogin }: SignUpFormProps) {
                 </FormControlError>
               </FormControl>
               <FormControl isInvalid={signUp.confirmPasswordInvalid} size="sm" isRequired>
-                <Input className={`my-1 ${inputHeightClass}`}>
+                <Input className={`${inputHeightClass}`}>
                   <InputField
                     placeholder="Confirmar contraseña"
                     value={signUp.confirmPassword}
@@ -154,12 +154,13 @@ export default function SignUpForm({ onSwitchToLogin }: SignUpFormProps) {
             <Button size="sm" variant="solid" className="w-full mt-4 mb-3" onPress={handleSignUp}>
               <ButtonText className="text-white">Registrarse</ButtonText>
             </Button>
-            <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 4 }}>
-              <Button variant="link" size="sm" onPress={onSwitchToLogin}>
+            <View >
+              <Button variant="link" size="md" onPress={onSwitchToLogin} style={{marginRight:22}}>
                   <ButtonIcon as={ChevronLeftIcon} className="text-primary-500" />
-                <ButtonText className={`text-primary-500 hover:underline ${linkTextClass}`}>Regresar</ButtonText>
+                  <ButtonText className="text-black text-sm" style={{ marginBottom: 3 }}>Regresar</ButtonText>
               </Button>
             </View>
+      </View>
     </>
   );
 }

@@ -12,6 +12,7 @@ import { Alert, AlertText, AlertIcon } from '@/components/ui/alert';
 import { InfoIcon } from '@/components/ui/icon';
 import { Input, InputField } from '@/components/ui/input';
 import { initialEvents, Event } from '../eventsData';
+import Seo from '@/components/helpers/Seo';
 
 export default function EventDetailPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -32,6 +33,7 @@ export default function EventDetailPage() {
   if (!event) {
     return (
       <View className="flex-1 justify-center items-center p-6">
+        <Seo title="Evento no encontrado" description="El evento solicitado no existe." />
         <Text className="text-xl text-gray-600">Evento no encontrado</Text>
         <Button onPress={() => router.back()} className="mt-4">
           <ButtonText>Volver</ButtonText>
@@ -65,6 +67,7 @@ export default function EventDetailPage() {
       style={{ flex: 1 }}
       contentContainerStyle={{ padding: 24 }}
     >
+      <Seo title={event.name} description={event.description} />
       <VStack space="lg">
         <Button onPress={() => router.back()} variant="outline" className="self-start">
           <ButtonText>← Volver</ButtonText>

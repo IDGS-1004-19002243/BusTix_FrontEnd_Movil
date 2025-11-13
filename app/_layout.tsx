@@ -9,11 +9,7 @@ import {
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
-import { useColorScheme } from "@/components/useColorScheme";
-import { Slot, usePathname } from "expo-router";
-import { StatusBar } from "expo-status-bar";
-import { Fab, FabIcon } from "@/components/ui/fab";
-import { MoonIcon, SunIcon } from "@/components/ui/icon";
+import { Stack, usePathname } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { SessionProvider } from "@/components/auth/contexts/ctx";
 import { SplashScreenController } from "@/components/auth/screens/splash";
@@ -62,7 +58,7 @@ function RootLayoutNav() {
           <ThemeProvider
             value={colorMode === "dark" ? DarkTheme : DefaultTheme}
           >
-            <Slot />
+            <Stack />
           </ThemeProvider>
         </GluestackUIProvider>
       </SafeAreaProvider>

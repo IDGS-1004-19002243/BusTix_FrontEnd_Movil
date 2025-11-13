@@ -1,4 +1,5 @@
 import { StyleSheet, Platform } from 'react-native';
+import { NAVBAR_BG } from '@/components/navbar/constants/navbarColors';
 
 export const navbarStyles = StyleSheet.create({
   container: {
@@ -15,7 +16,7 @@ export const navbarStyles = StyleSheet.create({
       },
     }),
     minHeight: 56,
-    backgroundColor: '#fffff',
+    backgroundColor: NAVBAR_BG,
   },
   menuButton: {
     ...Platform.select({

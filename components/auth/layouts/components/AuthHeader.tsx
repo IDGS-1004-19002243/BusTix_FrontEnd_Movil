@@ -8,7 +8,6 @@ import { AuthHeaderProps } from '../types';
 import { SIZES } from '../constants';
 
 export default function AuthHeader({ isMobile }: AuthHeaderProps) {
-  const insets = useSafeAreaInsets();
 
   const HeaderContent = (
     <>
@@ -21,5 +20,5 @@ export default function AuthHeader({ isMobile }: AuthHeaderProps) {
     </>
   );
 
-  return <View style={getHeaderStyle(isMobile, insets)}>{HeaderContent}</View>;
+  return <View style={getHeaderStyle(isMobile)}>{HeaderContent}</View>;
 }

@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, ScrollView } from 'react-native';
+import Seo from '@/components/helpers/Seo';
 
 export default function UsersPage() {
   return (
@@ -7,6 +8,7 @@ export default function UsersPage() {
       style={{ flex: 1 }}
       contentContainerStyle={{ padding: 24 }}
     >
+      <Seo title="Usuarios" description="Gestiona los usuarios registrados en BusTix." />
       <Text style={{ fontSize: 32, fontWeight: 'bold', marginBottom: 8, color: '#111827' }}>
         Usuarios 👥
       </Text>

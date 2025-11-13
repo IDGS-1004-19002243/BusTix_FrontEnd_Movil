@@ -1,4 +1,4 @@
-import { Slot } from "expo-router";
+import { Slot, Stack } from "expo-router";
 import { View, useWindowDimensions, Animated, Platform } from "react-native";
 import { useState, useEffect, useRef } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -72,14 +72,16 @@ export default function PagesLayout() {
      Este <Slot /> renderiza la página específica dentro del grupo (pages), como home o settings, completando la cadena de layouts. */
 
   return (
-    <View
-      style={{
-        flex: 1,
-        flexDirection: "row",
-        paddingTop: insets.top,
-        paddingBottom: insets.bottom,
-      }}
-    >
+    <>
+      <Stack.Screen options={{ headerShown: false }} />
+      <View
+        style={{
+          flex: 1,
+          flexDirection: "row",
+          paddingTop: insets.top,
+          paddingBottom: insets.bottom,
+        }}
+      >
       <Sidebar 
         isOpen={isMobile ? isSidebarOpen : true} 
         onClose={closeSidebar}
@@ -112,5 +114,6 @@ export default function PagesLayout() {
         </View>
       </View>
     </View>
+    </>
   );
 }
