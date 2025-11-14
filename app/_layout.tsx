@@ -11,6 +11,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
 import { Stack, usePathname } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SessionProvider } from "@/components/auth/contexts/ctx";
 import { SplashScreenController } from "@/components/auth/screens/splash";
 
@@ -50,17 +51,32 @@ function RootLayoutNav() {
   // Al ir a /home, el <Slot /> raíz renderiza el layout de (pages) (sidebar, navbar),
   // y el <Slot /> de (pages) que esta en _layout.tsx renderiza la página home. Cadena automática para modularidad.
 
+  /*
+          KeyboardProvider (react-native-keyboard-controller):
+          - Proporciona un contexto de eventos del teclado (apertura, cierre,
+            movimiento) a los hooks y componentes nativos/JS.
+          - Envolvemos la app para que hooks como `useGradualAnimation` reciban
+            actualizaciones del teclado y podamos animar el layout sin depender
+            de offsets (desplazamientos) fijos.
+          - `preload={false}` desactiva la precarga del teclado al iniciar la
+            aplicación (evita que el teclado aparezca brevemente al arrancar).
+            Si necesitas precargar manualmente más tarde, usa la API de
+            KeyboardController.
+        */
+
   return (
     <SessionProvider>
       <SplashScreenController />
       <SafeAreaProvider>
-        <GluestackUIProvider mode={colorMode}>
-          <ThemeProvider
-            value={colorMode === "dark" ? DarkTheme : DefaultTheme}
-          >
-            <Stack />
-          </ThemeProvider>
-        </GluestackUIProvider>
+        <KeyboardProvider preload={false}>
+          <GluestackUIProvider mode={colorMode}>
+            <ThemeProvider
+              value={colorMode === "dark" ? DarkTheme : DefaultTheme}
+            >
+              <Stack />
+            </ThemeProvider>
+          </GluestackUIProvider>
+        </KeyboardProvider>
       </SafeAreaProvider>
     </SessionProvider>
   );

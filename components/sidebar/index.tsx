@@ -61,7 +61,7 @@ export default function Sidebar({
           backgroundColor: SIDEBAR_COLORS.bg,
           borderRightWidth: 0.5,
           borderRightColor: SIDEBAR_COLORS.border,
-          ...(isMobile && { zIndex: 9 }),
+          ...(isMobile ? { zIndex: 9 } : { zIndex: 1 }),
           ...(isMobile && {
             position: "absolute",
             top: insets.top,

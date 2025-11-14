@@ -53,7 +53,7 @@ export const getHeaderStyle = (isMobile: boolean): ViewStyle => {
         flexDirection: 'row' as const,
         alignItems: 'center' as const,
         justifyContent: 'center' as const,
-        paddingTop: Platform.OS==='web'? 0:25,
+        paddingTop: Platform.OS==='web'? 0:0,
         backgroundColor: 'transparent',
       }
     : {
