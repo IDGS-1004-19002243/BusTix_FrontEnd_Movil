@@ -1,5 +1,4 @@
 # BusTix_FrontEnd_Movil
-<<<<<<< HEAD
 
 Este repositorio contiene el Frontend del proyecto BusTix en su versión móvil, desarrollado con React Native y Expo.
 
