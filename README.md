@@ -1,4 +1,5 @@
 # BusTix_FrontEnd_Movil
+<<<<<<< HEAD
 
 Este repositorio contiene el Frontend del proyecto BusTix en su versión móvil, desarrollado con React Native y Expo.
 
@@ -71,3 +72,4 @@ npx expo start --web          # Abre en navegador web
 - **TypeScript** - Tipado estático
 - **NativeWind** - Estilos con Tailwind CSS
 - **Expo Router** - Navegación basada en archivos
+
