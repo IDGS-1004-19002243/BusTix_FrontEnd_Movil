@@ -1,5 +1,5 @@
 import React from "react";
-import { Link, Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { Text } from "@/components/ui/text";
 import { Center } from "@/components/ui/center";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import Seo from '@/components/helpers/Seo';
 export default function NotFoundScreen() {
 
   const Web = Platform.OS === 'web';
+  const router = useRouter();
 
   return (
     <>
@@ -30,11 +31,9 @@ export default function NotFoundScreen() {
           contentFit="contain"
           accessibilityLabel="404 imagen"
         />
-        <Link href="/home" asChild>
-          <Button size="lg" variant="solid" className="mt-2">
-            <Text className="text-white">Ir al inicio</Text>
-          </Button>
-        </Link>
+        <Button size="lg" variant="solid" className="mt-2" onPress={() => router.push('/home')}>
+          <Text className="text-white">Ir al inicio</Text>
+        </Button>
       </Center>
     </>
   );
