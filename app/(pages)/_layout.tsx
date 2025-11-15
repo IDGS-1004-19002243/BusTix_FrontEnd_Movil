@@ -8,45 +8,34 @@ import Navbar from "../../components/navbar";
 import { useSidebarGestures } from "../../components/sidebar/hooks/useSidebarGestures";
 import { useSession } from '@/context/AuthContext';
 import { useRouter } from 'expo-router';
-import { useRoleGuard } from '@/hooks/useRoleGuard';
+import { useRouteAccess } from '@/hooks/useRouteAccess';
+import NotFoundScreen from '../+not-found';
 
 export default function PagesLayout() {
-    const { isAuthenticated, isLoading } = useSession();
+  const { isAuthenticated, isLoading, role } = useSession();
   const router = useRouter();
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
 
-  // Definir roles requeridos por ruta
-  const routeRoles: Record<string, string[]> = {
-    '/users': ['admin', 'manager'],
-    '/settings': ['admin'],
-  };
-
-  const allowedRoles = routeRoles[pathname] || [];
-  useRoleGuard(allowedRoles);
+  // Usar hook centralizado que lee `config/routeRoles.ts`.
+  const { allowed, isLoading: accessLoading, requiresRole, allowedRoles } = useRouteAccess(pathname);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  useEffect(() => {
-    if (!mounted || isLoading) return;
 
-    // If the current route has role restrictions, require authentication first.
-    if (allowedRoles.length > 0) {
-      if (!isAuthenticated) {
-        router.replace('/sign-in');
-      }
-      // If authenticated but role is incorrect, `useRoleGuard` will redirect to /404.
-      return;
-    }
+  // Calcular "blocked" de forma síncrona para que el componente pueda mostrar
+  // la pantalla de NotFound en el mismo lugar sin que aparezca brevemente la
+  // sidebar o la cabecera. "blocked" es true cuando la ruta requiere roles y
+  // el rol del usuario no coincide (o el usuario no está autenticado).
+  const blocked = !isLoading && requiresRole && !allowed;
 
-      // For non-role routes: still allow public pages (/home, /eventos and event details).
-      // Allow `/eventos` and any `/eventos/:id` path as public.
-      if (!isAuthenticated && pathname !== '/home' && !pathname.startsWith('/eventos')) {
-        router.replace('/not-found' as any);
-    }
-  }, [mounted, isLoading, isAuthenticated, pathname, allowedRoles]);
+  // "loadingOrMounting" es true mientras la sesión está cargando o
+  // el layout no se ha montado todavía. Durante ese tiempo evitamos dibujar
+  // la sidebar/navbar para que no aparezcan y desaparezcan (evitar parpadeos).
+  const loadingOrMounting = isLoading || !mounted;
+
 
   // Este layout maneja la sidebar, navbar y gestos de paneo para las páginas en (pages).
   // <Slot /> renderiza la página específica (ej. home, settings) dentro del grupo (pages).
@@ -121,37 +110,55 @@ export default function PagesLayout() {
           paddingBottom: insets.bottom,
         }}
       >
-      <Sidebar 
-        isOpen={isMobile ? isSidebarOpen : true} 
-        onClose={closeSidebar}
-        isCollapsed={!isMobile && isSidebarCollapsed}
-        onToggleCollapse={toggleCollapse}
-        slideAnim={slideAnim}
-        panHandlers={isMobile && Platform.OS !== 'web' ? sidebarPanHandlers : {}}
-      />
-      <View style={{ flex: 1 }}>
-        <Navbar onToggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
-
-        <View
-          style={{ flex: 1, backgroundColor: "#ffffff" }}
-          {...(isMobile && Platform.OS !== 'web' ? contentPanHandlers : {})}
-        >
-          {isLoading ? null : <Slot />}
-          <Animated.View
-            style={{
-              position: 'absolute',
-              left: -22,
-              top: '50%',
-              marginTop: '-20%',
-              width: '10%',
-              height: '40%',
-              borderRadius: '50%',
-              backgroundColor: 'rgba(0, 0, 0, 0.2)',
-              opacity: indicatorAnim,
-            }}
+      {loadingOrMounting ? (
+        // Explicación simple:
+        // - Si todavía estamos cargando la sesión o el layout no está listo,
+        //   no mostramos la sidebar ni la cabecera. Esto evita que se vea
+        //   brevemente la interfaz antes de decidir si se muestra NotFound.
+        // - Aquí podríamos mostrar un "skeleton" (menú mínimo) si quieres.
+        null
+      ) : blocked ? (
+        // Explicación simple:
+        // - Si "blocked" es true significa que la ruta existe pero el usuario
+        //   no tiene permiso. En vez de navegar a otra URL, mostramos la pantalla
+        //   de "Not Found" dentro del layout actual. De esta forma la URL
+        //   permanece igual (por ejemplo: /users) y no se ve la sidebar/navbar.
+        <NotFoundScreen />
+      ) : (
+        <>
+          <Sidebar
+            isOpen={isMobile ? isSidebarOpen : true}
+            onClose={closeSidebar}
+            isCollapsed={!isMobile && isSidebarCollapsed}
+            onToggleCollapse={toggleCollapse}
+            slideAnim={slideAnim}
+            panHandlers={isMobile && Platform.OS !== 'web' ? sidebarPanHandlers : {}}
           />
-        </View>
-      </View>
+          <View style={{ flex: 1 }}>
+            <Navbar onToggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
+
+            <View
+              style={{ flex: 1, backgroundColor: "#ffffff" }}
+              {...(isMobile && Platform.OS !== 'web' ? contentPanHandlers : {})}
+            >
+              {isLoading ? null : <Slot />}
+              <Animated.View
+                style={{
+                  position: 'absolute',
+                  left: -22,
+                  top: '50%',
+                  marginTop: '-20%',
+                  width: '10%',
+                  height: '40%',
+                  borderRadius: '50%',
+                  backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                  opacity: indicatorAnim,
+                }}
+              />
+            </View>
+          </View>
+        </>
+      )}
     </View>
     </>
   );

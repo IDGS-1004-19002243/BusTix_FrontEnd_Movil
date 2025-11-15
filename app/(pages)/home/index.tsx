@@ -11,7 +11,7 @@ import { Badge, BadgeText } from '@/components/ui/badge';
 import { useSession } from '@/context/AuthContext';
 
 export default function HomePage() {
-  const { signOut, role, email } = useSession();
+  const { session, isAuthenticated, role, email, isLoading, signOut } = useSession();
   const [showModal, setShowModal] = useState(true);
 
   const handleCloseModal = () => {
@@ -31,10 +31,19 @@ export default function HomePage() {
             Gestiona tus eventos y boletos de manera fácil y rápida
           </Text>
           <Text className="text-center text-black mb-4">
+            Session: {session || 'Sin sesión'}
+          </Text>
+          <Text className="text-center text-black mb-4">
+            Is Authenticated: {isAuthenticated ? 'Sí' : 'No'}
+          </Text>
+          <Text className="text-center text-black mb-4">
             Rol: {role || 'Sin rol'}
           </Text>
           <Text className="text-center text-black mb-4">
             Email: {email || 'Sin email'}
+          </Text>
+          <Text className="text-center text-black mb-4">
+            Is Loading: {isLoading ? 'Sí' : 'No'}
           </Text>
 
           <HStack space="md" className="flex-wrap justify-center">

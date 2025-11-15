@@ -13,7 +13,7 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen }: NavbarProps) 
   const { width } = useWindowDimensions();
   const isMobile = width < 768;
   const router = useRouter();
-  const { isAuthenticated } = useSession();
+  const { isAuthenticated, role, email } = useSession();
 
   return (
     <View style={[navbarStyles.container, isMobile && { minHeight: 64 }]}>
@@ -38,7 +38,7 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen }: NavbarProps) 
 
       {/* Iconos de la derecha */}
       <View style={navbarStyles.rightIcons}>
-        {isAuthenticated ? (
+        {isAuthenticated && role && email ? (
           <>
             <Notifications />
             <UserProfile />

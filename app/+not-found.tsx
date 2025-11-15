@@ -30,7 +30,7 @@ export default function NotFoundScreen() {
           contentFit="contain"
           accessibilityLabel="404 imagen"
         />
-        <Link href="/" asChild>
+        <Link href="/home" asChild>
           <Button size="lg" variant="solid" className="mt-2">
             <Text className="text-white">Ir al inicio</Text>
           </Button>

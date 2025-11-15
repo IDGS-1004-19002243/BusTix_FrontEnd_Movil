@@ -10,6 +10,7 @@ interface AuthContextType {
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
+  isSessionValid: () => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -21,10 +22,30 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [email, setEmail] = React.useState<string | null>(null);
 
   React.useEffect(() => {
-    getToken().then((token) => {
-      setSession(token);
+    const loadSession = async () => {
+      const token = await getToken();
+      const storedRole = localStorage.getItem('userRole');
+      const storedEmail = localStorage.getItem('userEmail');
+
+      // Si falta el token, role o email, considera la sesión inválida y haz logout automático
+      if (!token || !storedRole || !storedEmail) {
+        // Resetear estado localmente (sin llamar apiLogout para evitar loop)
+        setSession(null);
+        setRole(null);
+        setEmail(null);
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('userEmail');
+        // Opcional: limpiar tokens si quieres forzar logout completo
+        // await clearTokens();
+      } else {
+        // Sesión válida, cargar datos
+        setSession(token);
+        setRole(storedRole);
+        setEmail(storedEmail);
+      }
       setIsLoading(false);
-    });
+    };
+    loadSession();
   }, []);
 
   const signIn = async (email: string, password: string) => {
@@ -33,9 +54,16 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       setSession(response.token);
       setRole(response.user.role);
       setEmail(response.user.email);
+      // Guardar role y email en localStorage
+      localStorage.setItem('userRole', response.user.role);
+      localStorage.setItem('userEmail', response.user.email);
     } catch (error) {
       throw error; // Re-throw to handle in component
     }
+  };
+
+  const isSessionValid = () => {
+    return !!session && !!role && !!email;
   };
 
   const signOut = async () => {
@@ -43,10 +71,13 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     setSession(null);
     setRole(null);
     setEmail(null);
+    // Limpiar role y email de localStorage
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userEmail');
   };
 
   return (
-    <AuthContext.Provider value={{ session, isAuthenticated: !!session, role, email, isLoading, signIn, signOut }}>
+    <AuthContext.Provider value={{ session, isAuthenticated: !!session, role, email, isLoading, signIn, signOut, isSessionValid }}>
       {children}
     </AuthContext.Provider>
   );

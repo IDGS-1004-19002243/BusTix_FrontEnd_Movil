@@ -3,6 +3,7 @@ import { ScrollView, Platform } from 'react-native';
 import { SidebarContent } from '../content';
 import { menuSections } from '../../../config/menuData';
 import { useSession } from '@/context/AuthContext';
+import { routeRoles } from '@/config/routeRoles';
 
 interface SidebarBodyProps {
   isCollapsed: boolean;
@@ -17,16 +18,26 @@ export const SidebarBody: React.FC<SidebarBodyProps> = ({
 }) => {
   const { role } = useSession();
 
-  // Filtrar secciones e items basados en el rol
+  // Función helper para verificar acceso basado en routeRoles o roles del item
+  const hasAccess = (route: string | undefined, itemRoles?: string[]) => {
+    if (route) {
+      const normalized = route.replace('/(pages)', '');
+      const allowedRoles = routeRoles[normalized] || [];
+      return allowedRoles.length === 0 || allowedRoles.includes(role || '');
+    } else if (itemRoles && itemRoles.length > 0) {
+      return itemRoles.includes(role || '');
+    } else {
+      // Items sin route ni roles: mostrar solo si el usuario está autenticado
+      return !!role;
+    }
+  };
+
+  // Filtrar secciones e items basados en routeRoles centralizado o roles del item
   const filteredMenuSections = menuSections.map(section => ({
     ...section,
-    items: section.items.filter(item => 
-      !item.roles || item.roles.includes(role || '')
-    ).map(item => ({
+    items: section.items.filter(item => hasAccess(item.route, item.roles)).map(item => ({
       ...item,
-      submenu: item.submenu?.filter(subItem => 
-        !subItem.roles || subItem.roles.includes(role || '')
-      )
+      submenu: item.submenu?.filter(subItem => hasAccess(subItem.route, subItem.roles))
     })).filter(item => item.submenu ? item.submenu.length > 0 : true)
   })).filter(section => section.items.length > 0);
 

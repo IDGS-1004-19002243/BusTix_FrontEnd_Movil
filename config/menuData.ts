@@ -3,22 +3,12 @@ import {
   User,
   Settings,
   Calendar,
-  FileText,
-  BarChart3,
-  Briefcase,
-  List,
-  AlertCircle,
-  Package,
-  Send,
-  Shield,
-  PenTool,
-  Circle
 } from 'lucide-react-native';
 import { MenuSection } from '@/types/sidebar.types';
 
 export const menuSections: MenuSection[] = [
   {
-    title: 'Dashboard',
+    title: 'Inicio',
     items: [
       { 
         icon: Home, 
@@ -36,94 +26,22 @@ export const menuSections: MenuSection[] = [
         bgColor: '#FEF3C7',
         route: '/(pages)/eventos'
       },
-    ]
-  },
-  {
-    title: 'Páginas',
-    items: [
-      { 
-        icon: Briefcase, 
-        label: 'Gestión', 
-        hasSubmenu: true, 
-        color: '#6B7280', 
+      {
+        icon: Settings,
+        label: 'Configuración',
         active: false,
-        key: 'management',
-        roles: ['admin', 'manager'],
-        submenu: [
-          { label: 'Gestión de Usuarios', route: '/(pages)/users' },
-        ]
-      },
-      { 
-        icon: List, 
-        label: 'Niveles', 
-        hasSubmenu: true, 
-        color: '#6B7280', 
-        active: false,
-        key: 'menu-level',
-        roles: ['admin'],
-        submenu: [
-          { label: 'Nivel 1-1', route: '/(pages)/level-1-1' },
-          { label: 'Nivel 1-2', route: '/(pages)/level-1-2' },
-          { label: 'Nivel 1-3', route: '/(pages)/level-1-3' }
-        ]
-      },
-      { 
-        icon: AlertCircle, 
-        label: 'Páginas de Error', 
-        hasSubmenu: true, 
-        color: '#6B7280', 
-        active: false,
-        key: 'error-page',
-        roles: ['admin'],
-        submenu: [
-          { label: '403 - Prohibido', route: '/(pages)/403' },
-          { label: '404 - No Encontrado', route: '/(pages)/404' },
-          { label: '500 - Error Servidor', route: '/(pages)/500' }
-        ]
-      },
-    ]
-  },
-  {
-    title: 'UI',
-    items: [
-      { 
-        icon: Package, 
-        label: 'Components', 
-        subtitle: 'Custom UI Components',
-        hasSubmenu: true, 
         color: '#6B7280',
-        active: false,
-        key: 'components',
-        roles: ['admin', 'manager'],
-        submenu: [
-          { label: 'Buttons' },
-          { label: 'Forms' },
-          { label: 'Tables' },
-          { label: 'Cards' }
-        ]
+        bgColor: '#E5E7EB',
+        route: '/(pages)/settings'
       },
-      { 
-        icon: Send, 
-        label: 'Functions', 
-        hasSubmenu: true, 
-        color: '#6B7280', 
+      {
+        icon: User,
+        label: 'Usuarios',
         active: false,
-        key: 'functions',
-        roles: ['admin'],
-        submenu: [
-          { label: 'Copy' },
-          { label: 'Clipboard' }
-        ]
+        color: '#6B7280',
+        bgColor: '#E5E7EB',
+        route: '/(pages)/users'
       },
     ]
   },
-  {
-    title: 'Otros',
-    items: [
-      { icon: Shield, label: 'Permisos', color: '#6B7280', active: false, route: '/(pages)/permissions', roles: ['admin'] },
-      { icon: Calendar, label: 'Calendario', color: '#6B7280', active: false, route: '/(pages)/calendar', roles: ['manager', 'user'] },
-      { icon: FileText, label: 'Kanban', color: '#6B7280', active: false, route: '/(pages)/kanban', roles: ['admin', 'manager'] },
-      { icon: Settings, label: 'Configuración', color: '#6B7280', active: false, route: '/(pages)/settings', roles: ['admin'] },
-    ]
-  }
 ];
