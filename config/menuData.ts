@@ -48,6 +48,7 @@ export const menuSections: MenuSection[] = [
         color: '#6B7280', 
         active: false,
         key: 'management',
+        roles: ['admin', 'manager'],
         submenu: [
           { label: 'Gestión de Usuarios', route: '/(pages)/users' },
         ]
@@ -59,6 +60,7 @@ export const menuSections: MenuSection[] = [
         color: '#6B7280', 
         active: false,
         key: 'menu-level',
+        roles: ['admin'],
         submenu: [
           { label: 'Nivel 1-1', route: '/(pages)/level-1-1' },
           { label: 'Nivel 1-2', route: '/(pages)/level-1-2' },
@@ -72,6 +74,7 @@ export const menuSections: MenuSection[] = [
         color: '#6B7280', 
         active: false,
         key: 'error-page',
+        roles: ['admin'],
         submenu: [
           { label: '403 - Prohibido', route: '/(pages)/403' },
           { label: '404 - No Encontrado', route: '/(pages)/404' },
@@ -91,6 +94,7 @@ export const menuSections: MenuSection[] = [
         color: '#6B7280',
         active: false,
         key: 'components',
+        roles: ['admin', 'manager'],
         submenu: [
           { label: 'Buttons' },
           { label: 'Forms' },
@@ -105,6 +109,7 @@ export const menuSections: MenuSection[] = [
         color: '#6B7280', 
         active: false,
         key: 'functions',
+        roles: ['admin'],
         submenu: [
           { label: 'Copy' },
           { label: 'Clipboard' }
@@ -115,10 +120,10 @@ export const menuSections: MenuSection[] = [
   {
     title: 'Otros',
     items: [
-      { icon: Shield, label: 'Permisos', color: '#6B7280', active: false, route: '/(pages)/permissions' },
-      { icon: Calendar, label: 'Calendario', color: '#6B7280', active: false, route: '/(pages)/calendar' },
-      { icon: FileText, label: 'Kanban', color: '#6B7280', active: false, route: '/(pages)/kanban' },
-      { icon: Settings, label: 'Configuración', color: '#6B7280', active: false, route: '/(pages)/settings' },
+      { icon: Shield, label: 'Permisos', color: '#6B7280', active: false, route: '/(pages)/permissions', roles: ['admin'] },
+      { icon: Calendar, label: 'Calendario', color: '#6B7280', active: false, route: '/(pages)/calendar', roles: ['manager', 'user'] },
+      { icon: FileText, label: 'Kanban', color: '#6B7280', active: false, route: '/(pages)/kanban', roles: ['admin', 'manager'] },
+      { icon: Settings, label: 'Configuración', color: '#6B7280', active: false, route: '/(pages)/settings', roles: ['admin'] },
     ]
   }
 ];

@@ -10,6 +10,7 @@ export interface MenuItem {
   bgColor?: string;
   key?: string;
   subtitle?: string;
+  roles?: string[]; // Roles permitidos para este item
 }
 
 export interface MenuSection {

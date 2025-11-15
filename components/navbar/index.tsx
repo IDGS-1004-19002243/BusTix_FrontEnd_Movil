@@ -4,12 +4,16 @@ import type { NavbarProps } from './types';
 import { navbarStyles } from './styles';
 import { Button, ButtonIcon } from '@/components/ui/button';
 import { MenuIcon } from '@/components/ui/icon';
+import { useRouter } from 'expo-router';
+import { useSession } from '@/context/AuthContext';
 import UserProfile from './user-profile';
 import Notifications from './notifications';
 
 export default function Navbar({ onToggleSidebar, isSidebarOpen }: NavbarProps) {
   const { width } = useWindowDimensions();
   const isMobile = width < 768;
+  const router = useRouter();
+  const { isAuthenticated } = useSession();
 
   return (
     <View style={[navbarStyles.container, isMobile && { minHeight: 64 }]}>
@@ -34,11 +38,20 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen }: NavbarProps) 
 
       {/* Iconos de la derecha */}
       <View style={navbarStyles.rightIcons}>
-        {/* Notificaciones */}
-        <Notifications />
-
-        {/* Usuario */}
-        <UserProfile />
+        {isAuthenticated ? (
+          <>
+            <Notifications />
+            <UserProfile />
+          </>
+        ) : (
+          <Button
+            variant="outline"
+            size="md"
+            onPress={() => router.push('/sign-in')}
+          >
+            <Text>Iniciar Sesion</Text>
+          </Button>
+        )}
       </View>
     </View>
   );

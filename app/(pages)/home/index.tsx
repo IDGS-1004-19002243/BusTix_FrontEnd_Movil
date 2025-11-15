@@ -8,8 +8,10 @@ import Seo from '@/components/helpers/Seo';
 import { HStack } from '@/components/ui/hstack';
 import { Card } from '@/components/ui/card';
 import { Badge, BadgeText } from '@/components/ui/badge';
+import { useSession } from '@/context/AuthContext';
 
 export default function HomePage() {
+  const { signOut, role, email } = useSession();
   const [showModal, setShowModal] = useState(true);
 
   const handleCloseModal = () => {
@@ -27,6 +29,12 @@ export default function HomePage() {
           <Heading size="xl" className="text-center text-black">Bienvenido a BusTix 👋</Heading>
           <Text className="text-center text-black mb-4">
             Gestiona tus eventos y boletos de manera fácil y rápida
+          </Text>
+          <Text className="text-center text-black mb-4">
+            Rol: {role || 'Sin rol'}
+          </Text>
+          <Text className="text-center text-black mb-4">
+            Email: {email || 'Sin email'}
           </Text>
 
           <HStack space="md" className="flex-wrap justify-center">
@@ -55,6 +63,8 @@ export default function HomePage() {
               </VStack>
             </Card>
           </HStack>
+        
+       
         
           <Card className="bg-white border-2 border-gray-300">
             <VStack className="p-6">

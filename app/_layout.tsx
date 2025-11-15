@@ -12,7 +12,7 @@ import { useEffect, useState } from "react";
 import { Stack, usePathname } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { KeyboardProvider } from "react-native-keyboard-controller";
-import { SessionProvider } from "@/components/auth/contexts/ctx";
+import { SessionProvider, useSession } from "@/context/AuthContext";
 import { SplashScreenController } from "@/components/auth/screens/splash";
 
 export {
@@ -73,7 +73,7 @@ function RootLayoutNav() {
             <ThemeProvider
               value={colorMode === "dark" ? DarkTheme : DefaultTheme}
             >
-              <Stack />
+              <Stack screenOptions={{ headerShown: false }} />
             </ThemeProvider>
           </GluestackUIProvider>
         </KeyboardProvider>

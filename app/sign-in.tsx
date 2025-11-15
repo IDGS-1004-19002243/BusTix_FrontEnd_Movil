@@ -1,9 +1,9 @@
 import { Stack } from 'expo-router';
-import AuthScreen from '@/components/auth/screens/AuthScreen';
 import { Platform } from 'react-native';
 import Seo from '@/components/helpers/Seo';
+import AuthScreen from '../components/auth/screens/AuthScreen';
 
-export default function Login() {
+export default function SignIn() {
   const Web = Platform.OS === 'web';
 
   return (

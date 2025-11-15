@@ -7,6 +7,7 @@ import { Image } from '@/components/ui/image';
 import { Badge, BadgeText } from '@/components/ui/badge';
 import { Platform } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useSession } from '@/context/AuthContext';
 
 // Función para truncar email
 const truncateEmail = (email: string, maxLength: number = 20): string => {
@@ -18,8 +19,8 @@ const truncateEmail = (email: string, maxLength: number = 20): string => {
 const getRoleBadgeAction = (role: string) => {
   const roleColors = {
     'admin': 'info',
-    'staff': 'warning',
-    'usuario': 'success',
+    'manager': 'warning',
+    'user': 'success',
   } as const;
   
   return roleColors[role.toLowerCase() as keyof typeof roleColors] || 'error';
@@ -33,9 +34,10 @@ const getRoleText = (role: string): string => {
 const UserProfile = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const router = useRouter();
-  const userName = "Alexis Duran";
-  const userEmail = "duranalexis209@gmail.com";
-  const userRole = "Admin"; 
+  const { email, role, signOut } = useSession();
+  const userName = email ? email.split('@')[0] : 'Usuario'; // Usar parte del email como nombre
+  const userEmail = email || 'Sin email';
+  const userRole = role || 'user'; 
 
   return (
     <>
@@ -135,8 +137,10 @@ const UserProfile = () => {
           key="Logout" 
           textValue="Logout" 
           className={Platform.OS === 'web' ? "py-1 px-1" : "p-3"}
-              onPress={() => router.push('/auth/login')}
-
+          onPress={() => {
+            signOut();
+            router.replace('/home');
+          }}
         >
           <MenuItemLabel size="sm" className="text-warning-500">Logout</MenuItemLabel>
         </MenuItem>

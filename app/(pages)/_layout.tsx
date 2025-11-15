@@ -6,8 +6,48 @@ import { usePathname } from "expo-router";
 import Sidebar from "../../components/sidebar";
 import Navbar from "../../components/navbar";
 import { useSidebarGestures } from "../../components/sidebar/hooks/useSidebarGestures";
+import { useSession } from '@/context/AuthContext';
+import { useRouter } from 'expo-router';
+import { useRoleGuard } from '@/hooks/useRoleGuard';
 
 export default function PagesLayout() {
+    const { isAuthenticated, isLoading } = useSession();
+  const router = useRouter();
+  const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
+
+  // Definir roles requeridos por ruta
+  const routeRoles: Record<string, string[]> = {
+    '/users': ['admin', 'manager'],
+    '/settings': ['admin'],
+  };
+
+  const allowedRoles = routeRoles[pathname] || [];
+  useRoleGuard(allowedRoles);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted || isLoading) return;
+
+    // If the current route has role restrictions, require authentication first.
+    if (allowedRoles.length > 0) {
+      if (!isAuthenticated) {
+        router.replace('/sign-in');
+      }
+      // If authenticated but role is incorrect, `useRoleGuard` will redirect to /404.
+      return;
+    }
+
+      // For non-role routes: still allow public pages (/home, /eventos and event details).
+      // Allow `/eventos` and any `/eventos/:id` path as public.
+      if (!isAuthenticated && pathname !== '/home' && !pathname.startsWith('/eventos')) {
+        router.replace('/not-found' as any);
+    }
+  }, [mounted, isLoading, isAuthenticated, pathname, allowedRoles]);
+
   // Este layout maneja la sidebar, navbar y gestos de paneo para las páginas en (pages).
   // <Slot /> renderiza la página específica (ej. home, settings) dentro del grupo (pages).
   // Los gestos permiten abrir/cerrar la sidebar en móviles con PanResponder.
@@ -22,7 +62,6 @@ export default function PagesLayout() {
   const slideAnim = useRef(
     new Animated.Value(isMobile ? (isSidebarOpen ? 0 : -sidebarWidth) : 0)
   ).current;
-  const pathname = usePathname();
 
   useEffect(() => {
     if (isMobile) {
@@ -97,7 +136,7 @@ export default function PagesLayout() {
           style={{ flex: 1, backgroundColor: "#ffffff" }}
           {...(isMobile && Platform.OS !== 'web' ? contentPanHandlers : {})}
         >
-          <Slot />
+          {isLoading ? null : <Slot />}
           <Animated.View
             style={{
               position: 'absolute',

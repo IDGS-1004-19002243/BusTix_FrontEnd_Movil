@@ -2,6 +2,7 @@ import React from 'react';
 import { ScrollView, Platform } from 'react-native';
 import { SidebarContent } from '../content';
 import { menuSections } from '../../../config/menuData';
+import { useSession } from '@/context/AuthContext';
 
 interface SidebarBodyProps {
   isCollapsed: boolean;
@@ -14,6 +15,21 @@ export const SidebarBody: React.FC<SidebarBodyProps> = ({
   expandedMenus,
   onToggleSubmenu,
 }) => {
+  const { role } = useSession();
+
+  // Filtrar secciones e items basados en el rol
+  const filteredMenuSections = menuSections.map(section => ({
+    ...section,
+    items: section.items.filter(item => 
+      !item.roles || item.roles.includes(role || '')
+    ).map(item => ({
+      ...item,
+      submenu: item.submenu?.filter(subItem => 
+        !subItem.roles || subItem.roles.includes(role || '')
+      )
+    })).filter(item => item.submenu ? item.submenu.length > 0 : true)
+  })).filter(section => section.items.length > 0);
+
   return (
     <ScrollView
       style={{ flex: 1 }}
@@ -30,7 +46,7 @@ export const SidebarBody: React.FC<SidebarBodyProps> = ({
     >
       <SidebarContent
         sidebarOpen={!isCollapsed}
-        menuSections={menuSections}
+        menuSections={filteredMenuSections}
         expandedMenus={expandedMenus}
         onToggleSubmenu={onToggleSubmenu}
         isCollapsed={isCollapsed}

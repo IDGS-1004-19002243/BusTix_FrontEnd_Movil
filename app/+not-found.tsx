@@ -14,15 +14,15 @@ export default function NotFoundScreen() {
   return (
     <>
       {/* export options arriba para que otros desarrolladores las vean */}
-      <Stack.Screen options={{ title: "¡Ups!", headerShown: !Web }} />
+      <Stack.Screen options={{ title: "¡Página no encontrada!", headerShown: !Web }} />
       {/* Use the Seo helper to set a page-specific title + description */}
-      <Seo title="Página no encontrada" description="La página que buscas no existe o ha sido movida." />
+      <Seo title="Página no encontrada" description="La página que buscas no existe." />
       <Center className="flex-1 px-4">
         <Text className="text-2xl font-bold mb-2 text-center text-black">
-          ¡Ups! Página no encontrada
+          ¡Página no encontrada!
         </Text>
         <Text className="text-base text-center mb-4 text-gray-700">
-          La página que buscas no existe o ha sido movida.
+          La página que buscas no existe.
         </Text>
         <Image
           source={require("../assets/images/404.png")}

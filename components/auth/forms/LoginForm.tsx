@@ -89,6 +89,9 @@ export default function LoginForm({ onSwitchToSignUp }: LoginFormProps) {
             </FormControlError>
           </FormControl>
         </VStack>
+        {login.loginError && (
+          <Text className="text-red-500 text-center">{login.loginError}</Text>
+        )}
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginVertical: 8, width: '100%' }}>
           <Checkbox value="remember" isChecked={login.remember} onChange={login.setRemember} size={checkboxSize}>
             <CheckboxIndicator style={{ borderWidth: 1 }}>

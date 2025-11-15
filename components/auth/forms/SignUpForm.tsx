@@ -15,7 +15,7 @@ import { AlertCircleIcon } from '@/components/ui/icon';
 import { VStack } from '@/components/ui/vstack';
 import { router } from 'expo-router';
 import { useSignUp } from '../hooks/useSignUp';
-import { useSession } from '../contexts/ctx';
+import { useSession } from '@/context/AuthContext';
 
 interface SignUpFormProps {
   onSwitchToLogin: () => void;
@@ -31,7 +31,7 @@ export default function SignUpForm({ onSwitchToLogin }: SignUpFormProps) {
   const handleSignUp = () => {
     signUp.handleSignUp();
     if (!signUp.firstNameInvalid && !signUp.lastNamePInvalid && !signUp.emailInvalid && !signUp.signUpPasswordInvalid && !signUp.confirmPasswordInvalid) {
-      signIn(signUp.email);
+      signIn(signUp.email, signUp.password);
     }
   };
 
