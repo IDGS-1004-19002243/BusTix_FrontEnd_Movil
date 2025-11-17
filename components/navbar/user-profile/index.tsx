@@ -50,8 +50,8 @@ const getRoleText = (role: string): string => {
 const UserProfile = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const router = useRouter();
-  const { signOut, user } = useSession();
-  const { showSuccessToast, showErrorToast } = useToastManager();
+  const { signOut, user, setTransition } = useSession();
+  const { showToast } = useToastManager();
   // Preferir `user.name` (desde el token) o derivar del email
   const userName = truncateUserName(
     user?.name ||
@@ -144,14 +144,15 @@ const UserProfile = () => {
           textValue="Logout"
           className={Platform.OS === "web" ? "py-1 px-1" : "p-3"}
           onPress={async () => {
+            setTransition(true);
             try {
               const response = await signOut();
               if (response.isSuccess) {
-                showSuccessToast(response.message || "Sesión cerrada exitosamente");
+                showToast({ type: 'success', title: '', description: response.message || "Sesión cerrada exitosamente",closable: false, duration: 3500 });
               }
-              router.replace("/sign-in");
+              router.replace("/home");
             } catch (error: any) {
-              showErrorToast(error.message || "Error al cerrar sesión");
+              showToast({ type: 'error', title: 'Error al cerrar sesión', description: error.message || "Error al cerrar sesión" });
             }
           }}
         >

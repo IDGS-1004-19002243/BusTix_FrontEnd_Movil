@@ -5,9 +5,9 @@ import { useToastManager } from '@/components/toast';
 import { ApiError, ErrorType } from '@/services/api-errors';
 
 export const useLogin = () => {
-  const { signIn } = useSession();
+  const { signIn, setTransition } = useSession();
   const router = useRouter();
-  const { showSuccessToast, showErrorToast } = useToastManager();
+  const { showToast } = useToastManager();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(true);
@@ -26,22 +26,12 @@ export const useLogin = () => {
     if (!isUsernameInvalid && !isPasswordInvalid && !isLoading) {
       setIsLoading(true);
       try {
-        await signIn(username, password);
-        console.log('Inicio de sesión exitoso');
-        showSuccessToast('¡Bienvenido!', 'Inicio de sesión exitoso', { closable: false });
-        // Navigation removed here to avoid duplicate redirects. The SignIn page
-        // already listens to `isAuthenticated` and performs the redirect.
-      } catch (error) {
-        // Manejar errores categorizados
-        if (error && typeof error === 'object' && 'type' in error) {
-          const apiError = error as ApiError;
-          setLoginError(apiError.message);
-          showErrorToast('Error de inicio de sesión', apiError.message, { closable: false });
+        const response = await signIn(username, password);
+        if (response.isSuccess) {
+          showToast({ type: 'success', title: '', description: 'Inicio de sesión exitoso', closable: false, duration: 3500 });
         } else {
-          // Error no categorizado (fallback)
-          const message = error instanceof Error ? error.message : String(error);
-          setLoginError(message);
-          showErrorToast('Error de inicio de sesión', message, { closable: false });
+          const message = typeof response.message === 'string' ? response.message : (response.message as any)?.message || 'Error desconocido';
+          showToast({ type: 'error', title: 'Error de inicio de sesión', description: message, closable: false, duration: 3000 });
         }
       } finally {
         setIsLoading(false);

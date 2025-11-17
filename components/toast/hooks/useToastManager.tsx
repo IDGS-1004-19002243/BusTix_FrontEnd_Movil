@@ -36,41 +36,7 @@ export const useToastManager = () => {
     });
   };
 
-  // Función simplificada para mostrar toast de éxito
-  // title: texto obligatorio del toast
-  // description: texto opcional adicional
-  // options: objeto opcional con propiedades personalizables (closable, duration, placement)
-  // El tipo inline define que options es opcional y contiene propiedades opcionales
-  const showSuccessToast = (title: string, description?: string, options?: { closable?: boolean; duration?: number; placement?: 'top' | 'top right' | 'top left' | 'bottom' | 'bottom left' | 'bottom right' }) => {
-    showToast({
-      type: 'success',
-      title,
-      description,
-      closable: options?.closable,    // Si no se especifica, usa true
-      duration: options?.duration,     // Si no se especifica, usa valor por defecto de showToast
-      placement: options?.placement,    // Si no se especifica, usa 'top'
-    });
-  };
-
-  // Función simplificada para mostrar toast de error
-  // title: texto obligatorio del toast
-  // description: texto opcional adicional
-  // options: objeto opcional con propiedades personalizables (closable, duration, placement)
-  // El tipo inline define que options es opcional y contiene propiedades opcionales
-  const showErrorToast = (title: string, description?: string, options?: { closable?: boolean; duration?: number; placement?: 'top' | 'top right' | 'top left' | 'bottom' | 'bottom left' | 'bottom right' }) => {
-    showToast({
-      type: 'error',
-      title,
-      description,
-      closable: options?.closable,    // Si no se especifica, usa true
-      duration: options?.duration,     // Si no se especifica, usa valor por defecto de showToast
-      placement: options?.placement,    // Si no se especifica, usa 'top'
-    });
-  };
-
   return {
     showToast,
-    showSuccessToast,
-    showErrorToast,
   };
 };

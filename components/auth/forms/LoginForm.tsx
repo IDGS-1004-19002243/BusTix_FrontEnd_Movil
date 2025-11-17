@@ -34,8 +34,12 @@ export default function LoginForm({ onSwitchToSignUp }: LoginFormProps) {
   const labelTextClass = isWeb ? 'text-sm' : '';
   const login = useLogin();
 
-  const handleSignIn = () => {
-    login.handleSignIn();
+  const handleSignIn = async () => {
+    try {
+      await login.handleSignIn();
+    } catch (error) {
+      // Error ya manejado en useLogin
+    }
   };
 
   return (
@@ -103,7 +107,7 @@ export default function LoginForm({ onSwitchToSignUp }: LoginFormProps) {
           variant="solid"
           className="w-full mb-2"
           onPress={handleSignIn}
-          isDisabled={login.isLoading || login.isSubmitting}
+          isDisabled={login.isLoading}
         >
           {login.isLoading ? (
             <>

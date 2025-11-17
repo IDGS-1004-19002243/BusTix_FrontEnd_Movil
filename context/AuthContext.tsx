@@ -3,6 +3,8 @@ import { apiLogin, apiLogout, apiRegister } from '@/services/auth/auth.service';
 import { AuthResponseDto, LoginDto, RegisterDto } from '@/services/auth/auth.types';
 import { setTokens, clearTokens, getToken } from '@/services/auth/tokenStore';
 import { decodeToken, DecodedToken } from '@/services/auth/jwtUtils';
+import { useToastManager } from '@/components/toast';
+import { categorizeError } from '@/services/api-errors';
 
 interface User {
   id: string | null;
@@ -19,10 +21,12 @@ interface AuthContextType {
   isAuthenticated: boolean;
   user: User | null;
   isLoading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
+  isTransitioning: boolean;
+  signIn: (email: string, password: string) => Promise<AuthResponseDto>;
   signUp: (registerDto: RegisterDto) => Promise<AuthResponseDto>;
   signOut: () => Promise<AuthResponseDto>;
   isSessionValid: () => boolean;
+  setTransition: (transitioning: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -31,6 +35,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = React.useState<string | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const [user, setUser] = React.useState<User | null>(null);
+  const [isTransitioning, setIsTransitioning] = React.useState(false);
 
   useEffect(() => {
     const loadSession = async () => {
@@ -76,9 +81,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     loadSession();
   }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string): Promise<AuthResponseDto> => {
     try {
-
       const response: AuthResponseDto = await apiLogin({ Email: email, Password: password });
       if (response.isSuccess) {
         // Decodificar el token para obtener información del usuario
@@ -100,16 +104,28 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
           };
           setSession(response.token);
           setUser(userData);
+          setIsTransitioning(true);
 
         } else {
-          throw new Error('Invalid token received');
+          return { isSuccess: false, message: 'Token invalido recibido' } as AuthResponseDto;
         }
       }
+      return response;
     } catch (error) {
-      throw error; 
+      if (error && typeof error === 'object' && 'type' in error) {
+        // Ya es un ApiError categorizado
+        return { isSuccess: false, message: (error as any).message } as AuthResponseDto;
+      } else {
+        const apiError = categorizeError(error);
+        return { isSuccess: false, message: apiError.message } as AuthResponseDto;
+      }
     }
   };
 
+  // signUp: Función asíncrona para registrar un nuevo usuario
+  // Parámetros:
+  // - registerDto: Objeto de tipo RegisterDto que contiene los datos de registro (ej: email, password, nombre, etc.)
+  // Retorna: Promise<AuthResponseDto> - Respuesta de la API con el resultado del registro (isSuccess, message, token, etc.)
   const signUp = async (registerDto: RegisterDto): Promise<AuthResponseDto> => {
     try {
       const response = await apiRegister(registerDto);
@@ -136,10 +152,12 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       isAuthenticated: !!session,
       user,
       isLoading,
+      isTransitioning,
       signIn,
       signUp,
       signOut,
-      isSessionValid
+      isSessionValid,
+      setTransition: setIsTransitioning
     }}>
       {children}
     </AuthContext.Provider>
