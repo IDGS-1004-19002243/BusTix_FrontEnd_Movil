@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView } from 'react-native';
+import { Text, ScrollView } from 'react-native';
 import { Modal, ModalBackdrop, ModalContent, ModalHeader, ModalBody, ModalFooter } from '@/components/ui/modal';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Heading } from '@/components/ui/heading';
@@ -8,10 +8,8 @@ import Seo from '@/components/helpers/Seo';
 import { HStack } from '@/components/ui/hstack';
 import { Card } from '@/components/ui/card';
 import { Badge, BadgeText } from '@/components/ui/badge';
-import { useSession } from '@/context/AuthContext';
 
 export default function HomePage() {
-  const { session, isAuthenticated, role, email, isLoading, signOut } = useSession();
   const [showModal, setShowModal] = useState(true);
 
   const handleCloseModal = () => {
@@ -29,21 +27,6 @@ export default function HomePage() {
           <Heading size="xl" className="text-center text-black">Bienvenido a BusTix 👋</Heading>
           <Text className="text-center text-black mb-4">
             Gestiona tus eventos y boletos de manera fácil y rápida
-          </Text>
-          <Text className="text-center text-black mb-4">
-            Session: {session || 'Sin sesión'}
-          </Text>
-          <Text className="text-center text-black mb-4">
-            Is Authenticated: {isAuthenticated ? 'Sí' : 'No'}
-          </Text>
-          <Text className="text-center text-black mb-4">
-            Rol: {role || 'Sin rol'}
-          </Text>
-          <Text className="text-center text-black mb-4">
-            Email: {email || 'Sin email'}
-          </Text>
-          <Text className="text-center text-black mb-4">
-            Is Loading: {isLoading ? 'Sí' : 'No'}
           </Text>
 
           <HStack space="md" className="flex-wrap justify-center">
@@ -72,8 +55,6 @@ export default function HomePage() {
               </VStack>
             </Card>
           </HStack>
-        
-       
         
           <Card className="bg-white border-2 border-gray-300">
             <VStack className="p-6">
@@ -227,4 +208,3 @@ export default function HomePage() {
     </>
   );
 }
-

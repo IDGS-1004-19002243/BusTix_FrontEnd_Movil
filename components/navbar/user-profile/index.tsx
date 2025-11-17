@@ -1,29 +1,45 @@
-import React, { useState } from 'react';
-import { View, Text } from 'react-native';
-import { Avatar, AvatarFallbackText, AvatarImage, AvatarBadge } from '@/components/ui/avatar';
-import { Pressable } from '@/components/ui/pressable';
-import { Menu, MenuItem, MenuItemLabel, MenuSeparator } from '@/components/ui/menu';
-import { Image } from '@/components/ui/image';
-import { Badge, BadgeText } from '@/components/ui/badge';
-import { Platform } from 'react-native';
-import { useRouter } from 'expo-router';
-import { useSession } from '@/context/AuthContext';
+import React, { useState } from "react";
+import { View, Text } from "react-native";
+import {
+  Avatar,
+  AvatarFallbackText,
+  AvatarBadge,
+} from "@/components/ui/avatar";
+import { Pressable } from "@/components/ui/pressable";
+import {
+  Menu,
+  MenuItem,
+  MenuItemLabel,
+  MenuSeparator,
+} from "@/components/ui/menu";
+import { Badge, BadgeText } from "@/components/ui/badge";
+import { Image } from "@/components/ui/image";
+import { Platform } from "react-native";
+import { useRouter } from "expo-router";
+import { useSession } from "@/context/AuthContext";
+import { useToastManager } from "@/components/toast";
 
 // Función para truncar email
 const truncateEmail = (email: string, maxLength: number = 20): string => {
   if (email.length <= maxLength) return email;
-  return email.substring(0, maxLength) + '...';
+  return email.substring(0, maxLength) + "...";
+};
+
+// Función para truncar username
+const truncateUserName = (userName: string, maxLength: number = 15): string => {
+  if (userName.length <= maxLength) return userName;
+  return userName.substring(0, maxLength) + "...";
 };
 
 // Función para obtener el color del badge según el rol
 const getRoleBadgeAction = (role: string) => {
   const roleColors = {
-    'admin': 'info',
-    'manager': 'warning',
-    'user': 'success',
+    admin: "info",
+    manager: "warning",
+    user: "success",
   } as const;
-  
-  return roleColors[role.toLowerCase() as keyof typeof roleColors] || 'error';
+
+  return roleColors[role.toLowerCase() as keyof typeof roleColors] || "error";
 };
 
 // Función para obtener el texto del rol formateado
@@ -34,10 +50,15 @@ const getRoleText = (role: string): string => {
 const UserProfile = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const router = useRouter();
-  const { email, role, signOut } = useSession();
-  const userName = email ? email.split('@')[0] : 'Usuario'; // Usar parte del email como nombre
-  const userEmail = email || 'Sin email';
-  const userRole = role || 'user'; 
+  const { signOut, user } = useSession();
+  const { showSuccessToast, showErrorToast } = useToastManager();
+  // Preferir `user.name` (desde el token) o derivar del email
+  const userName = truncateUserName(
+    user?.name ||
+      (user?.email ? user.email.split("@")[0] : "Usuario")
+  );
+  const userEmail = user?.email || 'Sin email';
+  const userRole = user?.roles?.[0] || 'user';
 
   return (
     <>
@@ -51,14 +72,15 @@ const UserProfile = () => {
         trigger={({ ...triggerProps }) => {
           return (
             <Pressable {...triggerProps}>
-              <View className={isMenuOpen ? 'border border-outline-500  rounded-full p-1' : 'p-1'}>
-                <Avatar size={Platform.OS === 'web' ? 'sm' : 'md'}>
+              <View
+                className={
+                  isMenuOpen
+                    ? "border border-outline-500  rounded-full p-1"
+                    : "p-1"
+                }
+              >
+                <Avatar size={Platform.OS === "web" ? "sm" : "md"}>
                   <AvatarFallbackText>{userName}</AvatarFallbackText>
-                  <AvatarImage
-                    source={{
-                      uri: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8dXNlcnxlbnwwfHwwfHw%3D&auto=format&fit=crop&w=800&q=60",
-                    }}
-                  />
                   <AvatarBadge className="bg-success-500 border-background-0" />
                 </Avatar>
               </View>
@@ -66,83 +88,76 @@ const UserProfile = () => {
           );
         }}
       >
-        <MenuItem 
-          key="header" 
+        <MenuItem
+          key="header"
           textValue="header"
           disabled
-          className={Platform.OS === 'web' 
-            ? "px-2 py-1 cursor-default" 
-            : "p-2"
-          }
-          style={{ 
-            pointerEvents: 'none',
+          className={Platform.OS === "web" ? "px-2 py-1 cursor-default" : "p-2"}
+          style={{
+            pointerEvents: "none",
             opacity: 1,
-            backgroundColor: 'transparent'
+            backgroundColor: "transparent",
           }}
         >
           <View className="flex-row items-center">
-            <Image
-              size="xs"
-              source={{
-                uri: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8dXNlcnxlbnwwfHwwfHw%3D&auto=format&fit=crop&w=800&q=60",
-              }}
-              alt="User profile"
-              className="rounded-full mr-2"
-            />
+            <Avatar size={Platform.OS === "web" ? "sm" : "md"} className="mr-2">
+              <AvatarFallbackText>{userName}</AvatarFallbackText>
+            </Avatar>
             <View>
-              <Badge 
-                size="sm" 
-                variant="solid" 
-                action={getRoleBadgeAction(userRole)}
-                style={{ alignSelf: 'flex-start' }}
-              >
-                <BadgeText className="font-bold" style={{ textTransform: 'none' }}>{getRoleText(userRole)}</BadgeText>
-              </Badge>
-              <Text className="text-xs text-typography-500">{truncateEmail(userEmail, 18)}</Text>
+              <Text className="text-xs font-medium text-black">{userName}</Text>
+              <Text className="text-xs text-typography-500">
+                {truncateEmail(userEmail, 18)}
+              </Text>
+              {userRole.toLowerCase() !== 'user' && (
+                <Badge
+                  size="sm"
+                  variant="solid"
+                  action={getRoleBadgeAction(userRole)}
+                  style={{ alignSelf: "flex-start", marginTop: 4 }}
+                >
+                  <BadgeText
+                    className="font-bold"
+                    style={{ textTransform: "none" }}
+                  >
+                    {getRoleText(userRole)}
+                  </BadgeText>
+                </Badge>
+              )}
             </View>
           </View>
         </MenuItem>
 
         <MenuSeparator />
 
-        <MenuItem 
-          key="Profile" 
-          textValue="Profile" 
-          className={Platform.OS === 'web' ? "py-1 px-1" : "p-3"}
+        <MenuItem
+          key="Profile"
+          textValue="Profile"
+          className={Platform.OS === "web" ? "py-1 px-1" : "p-3"}
         >
-          <MenuItemLabel size="sm">Profile</MenuItemLabel>
-        </MenuItem>
-
-        <MenuItem 
-          key="Document" 
-          textValue="Document" 
-          className={Platform.OS === 'web' ? "py-1 px-1" : "p-3"}
-        >
-          <MenuItemLabel size="sm">Document</MenuItemLabel>
-        </MenuItem>
-
-      
-
-        <MenuItem 
-          key="Account" 
-          textValue="Account" 
-          className={Platform.OS === 'web' ? "py-1 px-1" : "p-3"}
-        >
-          <MenuItemLabel size="sm">Account</MenuItemLabel>
+          <MenuItemLabel size="sm">Perfil</MenuItemLabel>
         </MenuItem>
 
         <MenuSeparator />
 
-        <MenuItem 
-          key="Logout" 
-          textValue="Logout" 
-          className={Platform.OS === 'web' ? "py-1 px-1" : "p-3"}
-          onPress={() => {
-            signOut();
-            router.replace('/home');
+        <MenuItem
+          key="Logout"
+          textValue="Logout"
+          className={Platform.OS === "web" ? "py-1 px-1" : "p-3"}
+          onPress={async () => {
+            try {
+              const response = await signOut();
+              if (response.isSuccess) {
+                showSuccessToast(response.message || "Sesión cerrada exitosamente");
+              }
+              router.replace("/sign-in");
+            } catch (error: any) {
+              showErrorToast(error.message || "Error al cerrar sesión");
+            }
           }}
         >
-          <MenuItemLabel size="sm" className="text-warning-500">Logout</MenuItemLabel>
+          <MenuItemLabel size="sm" className="text-warning-500">
+            Cerrar Sesión
+          </MenuItemLabel>
         </MenuItem>
       </Menu>
     </>

@@ -2,7 +2,7 @@ import React from 'react';
 import { View, useWindowDimensions, Platform, Pressable } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { Input, InputField } from '@/components/ui/input';
-import { Button, ButtonText } from '@/components/ui/button';
+import { Button, ButtonText, ButtonSpinner } from '@/components/ui/button';
 import { Checkbox, CheckboxIndicator, CheckboxLabel, CheckboxIcon } from '@/components/ui/checkbox';
 import { CheckIcon } from '@/components/ui/icon';
 import { Image } from 'expo-image';
@@ -36,8 +36,6 @@ export default function LoginForm({ onSwitchToSignUp }: LoginFormProps) {
 
   const handleSignIn = () => {
     login.handleSignIn();
-    if (!login.usernameInvalid && !login.passwordInvalid) {
-    }
   };
 
   return (
@@ -89,9 +87,6 @@ export default function LoginForm({ onSwitchToSignUp }: LoginFormProps) {
             </FormControlError>
           </FormControl>
         </VStack>
-        {login.loginError && (
-          <Text className="text-red-500 text-center">{login.loginError}</Text>
-        )}
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginVertical: 8, width: '100%' }}>
           <Checkbox value="remember" isChecked={login.remember} onChange={login.setRemember} size={checkboxSize}>
             <CheckboxIndicator style={{ borderWidth: 1 }}>
@@ -103,8 +98,20 @@ export default function LoginForm({ onSwitchToSignUp }: LoginFormProps) {
             <ButtonText className="text-black text-xs">Olvidaste tu contraseña?</ButtonText>
           </Button>
         </View>
-        <Button size="sm" variant="solid" className="w-full mb-2" onPress={handleSignIn}>
-          <Text className="text-white">Iniciar sesión</Text>
+        <Button
+          size="sm"
+          variant="solid"
+          className="w-full mb-2"
+          onPress={handleSignIn}
+          isDisabled={login.isLoading || login.isSubmitting}
+        >
+          {login.isLoading ? (
+            <>
+              <ButtonSpinner color="white" />
+            </>
+          ) : (
+            <ButtonText className="text-white">Iniciar sesión</ButtonText>
+          )}
         </Button>
         <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 5 }}>
           <Text style={{ color: '#000000E0' }}>¿No tienes una cuenta?</Text>

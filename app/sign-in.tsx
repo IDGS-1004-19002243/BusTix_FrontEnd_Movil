@@ -18,19 +18,25 @@ export default function SignIn() {
   // Hook para navegar entre páginas
   const router = useRouter();
 
-  // Estado para saber si estamos verificando la autenticación (evita mostrar flashes)
+  // Estado para saber si estamos verificando la autenticación.
+  // Inicia en 'true' por defecto para evitar mostrar flashes (parpadeos) del formulario
+  // antes de confirmar si el usuario ya está logueado. Mientras es 'true', no se renderiza nada.
   const [isChecking, setIsChecking] = useState(true);
 
-  // Efecto que se ejecuta al cargar la página
+  // Efecto que se ejecuta se ejecuta una vez al montar el componente, cuando cambia 'isAuthenticated', router
+  // Propósito: Verificar el estado de autenticación y decidir si mostrar el formulario o redirigir.
+  // - Si 'isAuthenticated' es true (usuario logueado), redirige a '/home' sin mostrar formulario.
+  // - Si es false (no logueado), cambia 'isChecking' a false para permitir renderizar el formulario.
+  // Esto asegura una transición suave sin flashes.
   useEffect(() => {
     // Si ya está logueado, lo manda a home sin mostrar el formulario
     if (isAuthenticated) {
       router.replace('/home');
     } else {
-      // Si no está logueado, permite mostrar el formulario
+      // Si no está logueado, permite mostrar el formulario cambiando isChecking a false
       setIsChecking(false);
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router]); // array de dependencias
 
   // Mientras verifica, no muestra nada para evitar parpadeos
   if (isChecking) {

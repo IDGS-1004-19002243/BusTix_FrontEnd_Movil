@@ -12,13 +12,12 @@ import { useRouteAccess } from '@/hooks/useRouteAccess';
 import NotFoundScreen from '../+not-found';
 
 export default function PagesLayout() {
-  const { isAuthenticated, isLoading, role } = useSession();
-  const router = useRouter();
+  const {isLoading} = useSession();
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
 
   // Usar hook centralizado que lee `config/routeRoles.ts`.
-  const { allowed, isLoading: accessLoading, requiresRole, allowedRoles } = useRouteAccess(pathname);
+  const { allowed, requiresRole } = useRouteAccess(pathname);
 
   useEffect(() => {
     setMounted(true);
@@ -111,14 +110,14 @@ export default function PagesLayout() {
         }}
       >
       {loadingOrMounting ? (
-        // Explicación simple:
+        // Explicación :
         // - Si todavía estamos cargando la sesión o el layout no está listo,
         //   no mostramos la sidebar ni la cabecera. Esto evita que se vea
         //   brevemente la interfaz antes de decidir si se muestra NotFound.
         // - Aquí podríamos mostrar un "skeleton" (menú mínimo) si quieres.
         null
       ) : blocked ? (
-        // Explicación simple:
+        // Explicación :
         // - Si "blocked" es true significa que la ruta existe pero el usuario
         //   no tiene permiso. En vez de navegar a otra URL, mostramos la pantalla
         //   de "Not Found" dentro del layout actual. De esta forma la URL

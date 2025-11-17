@@ -11,6 +11,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SessionProvider } from "@/context/AuthContext";
 import { SplashScreenController } from "@/components/auth/screens/splash";
+import '@/services/auth/interceptors'; // Importar para configurar axios interceptores
 
 export {
   // Catch any errors thrown by the Layout component.

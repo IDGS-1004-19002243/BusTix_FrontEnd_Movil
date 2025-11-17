@@ -16,16 +16,17 @@ export const SidebarBody: React.FC<SidebarBodyProps> = ({
   expandedMenus,
   onToggleSubmenu,
 }) => {
-  const { role } = useSession();
+  const { user } = useSession();
 
   // Función helper para verificar acceso basado en routeRoles o roles del item
   const hasAccess = (route: string | undefined, itemRoles?: string[]) => {
+    const role = user?.roles?.[0] || '';
     if (route) {
       const normalized = route.replace('/(pages)', '');
       const allowedRoles = routeRoles[normalized] || [];
-      return allowedRoles.length === 0 || allowedRoles.includes(role || '');
+      return allowedRoles.length === 0 || allowedRoles.includes(role);
     } else if (itemRoles && itemRoles.length > 0) {
-      return itemRoles.includes(role || '');
+      return itemRoles.includes(role);
     } else {
       // Items sin route ni roles: mostrar solo si el usuario está autenticado
       return !!role;
