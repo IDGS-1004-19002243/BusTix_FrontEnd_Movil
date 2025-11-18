@@ -14,8 +14,6 @@ export async function apiLogin(loginDto: LoginDto): Promise<AuthResponseDto> {
     const response = await axios.post<AuthResponseDto>('/account/login', loginDto);
     const data = response.data;
 
-    console.log('📋 Respuesta de login del backend:', data);
-
     if (data.isSuccess) {
       // Guardar tokens
       await setTokens({ token: data.token, refreshToken: data.refreshToken });
@@ -39,7 +37,6 @@ export async function apiLogin(loginDto: LoginDto): Promise<AuthResponseDto> {
 
     // Categorizar el error y lanzar el error estructurado
     const categorizedError = categorizeError(error);
-    console.log(`📋 Error categorizado: ${categorizedError.type} - ${categorizedError.message}`);
 
     throw categorizedError;
   }
@@ -64,12 +61,8 @@ export async function apiLogout(): Promise<AuthResponseDto> {
     const response = await axios.post<AuthResponseDto>('/account/logout');
     const data = response.data;
 
-    console.log('📋 Respuesta de logout del backend:', data);
 
-    if (data.isSuccess) {
-      // Limpiar tokens
-      await clearTokens();
-    } else {
+    if (!data.isSuccess) {
       // El backend devolvió isSuccess: false, convertirlo en error categorizado
       const clientError: ApiError = {
         type: ErrorType.CLIENT_ERROR,
@@ -89,9 +82,10 @@ export async function apiLogout(): Promise<AuthResponseDto> {
 
     // Categorizar el error y lanzar el error estructurado
     const categorizedError = categorizeError(error);
-    console.log(`📋 Error categorizado: ${categorizedError.type} - ${categorizedError.message}`);
 
     throw categorizedError;
+  } finally {
+      clearTokens().catch(() => {});
   }
 }
 

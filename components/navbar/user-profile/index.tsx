@@ -17,7 +17,6 @@ import { Image } from "@/components/ui/image";
 import { Platform } from "react-native";
 import { useRouter } from "expo-router";
 import { useSession } from "@/context/AuthContext";
-import { useToastManager } from "@/components/toast";
 
 // Función para truncar email
 const truncateEmail = (email: string, maxLength: number = 20): string => {
@@ -50,8 +49,7 @@ const getRoleText = (role: string): string => {
 const UserProfile = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const router = useRouter();
-  const { signOut, user, setTransition } = useSession();
-  const { showToast } = useToastManager();
+  const { signOut, user } = useSession();
   // Preferir `user.name` (desde el token) o derivar del email
   const userName = truncateUserName(
     user?.name ||
@@ -144,16 +142,8 @@ const UserProfile = () => {
           textValue="Logout"
           className={Platform.OS === "web" ? "py-1 px-1" : "p-3"}
           onPress={async () => {
-            setTransition(true);
-            try {
-              const response = await signOut();
-              if (response.isSuccess) {
-                showToast({ type: 'success', title: '', description: response.message || "Sesión cerrada exitosamente",closable: false, duration: 3500 });
-              }
-              router.replace("/home");
-            } catch (error: any) {
-              showToast({ type: 'error', title: 'Error al cerrar sesión', description: error.message || "Error al cerrar sesión" });
-            }
+            await signOut();
+            router.replace("/home");
           }}
         >
           <MenuItemLabel size="sm" className="text-warning-500">

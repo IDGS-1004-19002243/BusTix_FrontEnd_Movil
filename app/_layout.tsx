@@ -31,9 +31,11 @@ function RootLayoutNav() {
   const [colorMode, setColorMode] = useState<"light" | "dark">("light");
 
   return (
-    <SessionProvider>
-      <AppContent colorMode={colorMode} />
-    </SessionProvider>
+    <GluestackUIProvider mode={colorMode}>
+      <SessionProvider>
+        <AppContent colorMode={colorMode} />
+      </SessionProvider>
+    </GluestackUIProvider>
   );
 }
 
@@ -44,19 +46,27 @@ function AppContent({ colorMode }: { colorMode: "light" | "dark" }) {
     <>
       <SplashScreenController />
       {isTransitioning && (
-        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999 }}>
+        // View que actúa como contenedor absoluto para la transición de carga.
+        // Se muestra solo cuando isTransitioning es true, cubriendo toda la pantalla para evitar flashes del contenido.
+        <View style={{
+          position: 'absolute', // Posiciona la vista de manera absoluta, permitiendo superponerla sobre otros elementos sin afectar el layout normal.
+          top: 0, // "Borde superior" se refiere a la linea superior del view. Valor 0 lo pega al borde superior del contenedor padre (pantalla), sin separación.
+          left: 0, 
+          right: 0, 
+          bottom: 0, 
+          // Al usar 0 en los cuatro lados, la vista se estira para ocupar todo el ancho y alto disponible, cubriendo completamente la pantalla como un overlay.
+          zIndex: 999 // Establece un índice Z alto para asegurar que la vista esté encima de todos los demás elementos en la pantalla.
+        }}>
           <LoadingTransition duration={2000} onComplete={() => setTransition(false)} />
         </View>
       )}
       <SafeAreaProvider>
         <KeyboardProvider preload={false}>
-          <GluestackUIProvider mode={colorMode}>
-            <ThemeProvider
-              value={colorMode === "dark" ? DarkTheme : DefaultTheme}
-            >
-              <Stack screenOptions={{ headerShown: false }} />
-            </ThemeProvider>
-          </GluestackUIProvider>
+          <ThemeProvider
+            value={colorMode === "dark" ? DarkTheme : DefaultTheme}
+          >
+            <Stack screenOptions={{ headerShown: false }} />
+          </ThemeProvider>
         </KeyboardProvider>
       </SafeAreaProvider>
     </>

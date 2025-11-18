@@ -18,11 +18,9 @@ export interface Tokens {
 }
 
 export async function setTokens(tokens: Tokens): Promise<void> {
-  console.log('TokenStore: Setting tokens - Access:', tokens.token ? 'Present' : 'Null', 'Refresh:', tokens.refreshToken ? 'Present' : 'Null');
   // Guarda el access token y el refresh token usando setStorageItemAsync.
   await setStorageItemAsync(TOKEN_KEY, tokens.token);
   await setStorageItemAsync(REFRESH_KEY, tokens.refreshToken);
-  console.log('TokenStore: Tokens saved successfully');
 }
 
 export async function getTokens(): Promise<Tokens> {
@@ -30,7 +28,6 @@ export async function getTokens(): Promise<Tokens> {
   // Devuelve { token: null, refreshToken: null } si no hay tokens.
   const token = await getStorageItemAsync(TOKEN_KEY);
   const refreshToken = await getStorageItemAsync(REFRESH_KEY);
-  console.log('TokenStore: Retrieved tokens - Access:', token ? 'Present' : 'Null', 'Refresh:', refreshToken ? 'Present' : 'Null');
   return { token: token ?? null, refreshToken: refreshToken ?? null };
 }
 

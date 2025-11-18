@@ -18,7 +18,9 @@ export const useToastManager = () => {
     // closable: true por defecto (permite cerrar el toast)
     const { type, title, description, duration = type === 'success' ? 2000 : 3000, placement = 'top', closable = true } = options;
 
+    const newId = String(Math.random());
     toast.show({
+      id: newId,
       placement,
       duration,
       render: ({ id }) => {

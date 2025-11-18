@@ -10,12 +10,6 @@ import { Card } from '@/components/ui/card';
 import { Badge, BadgeText } from '@/components/ui/badge';
 
 export default function HomePage() {
-  const [showModal, setShowModal] = useState(true);
-
-  const handleCloseModal = () => {
-    setShowModal(false);
-  };
-
   return (
     <>
       <Seo title="Inicio" description="Panel de control de BusTix: eventos, ventas y estadísticas." />
@@ -183,28 +177,6 @@ export default function HomePage() {
           </HStack>
         </VStack>
     </ScrollView>
-
-    <Modal isOpen={showModal} onClose={handleCloseModal}>
-      <ModalBackdrop />
-      <ModalContent>
-        <ModalHeader>
-          <Heading size="md">¡Bienvenido a BusTix! 🎉</Heading>
-        </ModalHeader>
-        <ModalBody>
-          <Text style={{ fontSize: 16, color: '#6b7280', marginBottom: 16 }}>
-            Gracias por usar nuestra aplicación. Aquí podrás gestionar tus boletos de manera fácil y rápida.
-          </Text>
-          <Text style={{ fontSize: 14, color: '#6b7280' }}>
-            Explora las secciones del menú lateral para comenzar.
-          </Text>
-        </ModalBody>
-        <ModalFooter>
-          <Button onPress={handleCloseModal}>
-            <ButtonText>Empezar</ButtonText>
-          </Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
     </>
   );
 }
