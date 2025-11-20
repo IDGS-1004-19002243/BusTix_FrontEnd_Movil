@@ -34,6 +34,19 @@ export const getCategoryColor = (category: string) => {
   return colors[category] || 'muted';
 };
 
+// Función para obtener el color de fondo de una categoría de evento
+export const getCategoryBgColor = (category: string) => {
+  // Mapa de categorías a colores de fondo (ej: 'Concierto' → 'bg-green-100')
+  const bgColors: Record<string, string> = {
+    'Concierto': 'bg-green-100', // Verde claro para conciertos
+    'Teatro': 'bg-blue-100',     // Azul claro para teatro
+    'Deportivo': 'bg-yellow-100', // Amarillo claro para deportes
+    'Festival': 'bg-red-100',     // Rojo claro para festivales
+  };
+  // Devuelve el color de fondo de la categoría o 'bg-gray-100' si no está en el mapa
+  return bgColors[category] || 'bg-gray-100';
+};
+
 // Función para calcular la configuración de la cuadrícula (columnas y ancho de tarjetas)
 export const getGridConfig = (width: number, isMobile: boolean) => {
   // Define el espacio entre tarjetas (12 píxeles)

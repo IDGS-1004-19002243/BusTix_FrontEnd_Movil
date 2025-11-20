@@ -34,14 +34,6 @@ export const menuSections: MenuSection[] = [
         bgColor: '#E5E7EB',
         route: '/(pages)/settings'
       },
-      {
-        icon: User,
-        label: 'Usuarios',
-        active: false,
-        color: '#6B7280',
-        bgColor: '#E5E7EB',
-        route: '/(pages)/users'
-      },
     ]
   },
 ];
