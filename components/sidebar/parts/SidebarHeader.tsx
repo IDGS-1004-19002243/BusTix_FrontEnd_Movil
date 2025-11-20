@@ -52,7 +52,7 @@ export const SidebarHeader: React.FC<SidebarHeaderProps> = ({
           resizeMode="cover"
         />
         {!isCollapsed && (
-          <Text style={sidebarStyles.logoText}>Slash Admin</Text>
+          <Text style={sidebarStyles.logoText}>Bustix</Text>
         )}
       </View>
 

@@ -48,7 +48,7 @@ export default function LoginForm({ onSwitchToSignUp }: LoginFormProps) {
         <VStack space="sm" className="w-full">
           <FormControl isInvalid={login.usernameInvalid} size="sm" isRequired>
             <FormControlLabel>
-              <Text className={labelTextClass} style={{ color: '#000000E0' }}>Usuario</Text>
+              <Text className={labelTextClass} style={{ color: '#000000E0' }}>Correo</Text>
             </FormControlLabel>
             <Input className={`my-1 ${inputHeightClass}`}>
               <InputField

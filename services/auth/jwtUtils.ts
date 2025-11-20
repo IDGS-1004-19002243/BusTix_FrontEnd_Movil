@@ -31,7 +31,6 @@ export function decodeToken(token: string): DecodedToken | null {
 
     return decoded;
   } catch (error) {
-    console.error('Error decoding token:', error);
     return null;
   }
 }
@@ -41,7 +40,6 @@ export function getTokenExpiration(token: string): Date | null {
     const decoded = jwtDecode<{ exp: number }>(token);
     return new Date(decoded.exp * 1000);
   } catch (error) {
-    console.error('Error getting token expiration:', error);
     return null;
   }
 }

@@ -2,6 +2,20 @@ import { useState } from 'react';
 import { useSession } from '@/context/AuthContext';
 import { useRouter } from 'expo-router';
 
+const validateEmail = (email: string) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+const validatePassword = (password: string) => {
+  const hasDigit = /\d/.test(password);
+  const hasLowercase = /[a-z]/.test(password);
+  const hasUppercase = /[A-Z]/.test(password);
+  const hasNonAlphanumeric = /[^a-zA-Z\d]/.test(password);
+  const hasMinLength = password.length >= 8;
+  return hasDigit && hasLowercase && hasUppercase && hasNonAlphanumeric && hasMinLength;
+};
+
 export const useLogin = () => {
   const { signIn, setTransition } = useSession();
   const router = useRouter();
@@ -14,11 +28,22 @@ export const useLogin = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSignIn = async () => {
-    const isUsernameInvalid = username.trim() === '';
-    const isPasswordInvalid = password.length < 6;
+    let isUsernameInvalid = username.trim() === '' || !validateEmail(username);
+    let isPasswordInvalid = password.trim() === '';
+    let errorMessage = '';
+
+    if (username.trim() === '') {
+      errorMessage = 'El correo electrónico es obligatorio.';
+    } else if (!validateEmail(username)) {
+      errorMessage = 'El correo electrónico no es válido.';
+    } else if (password.trim() === '') {
+      errorMessage = 'La contraseña es obligatoria.';
+      isPasswordInvalid = true;
+    }
+
     setUsernameInvalid(isUsernameInvalid);
     setPasswordInvalid(isPasswordInvalid);
-    setLoginError('');
+    setLoginError(errorMessage);
 
     if (!isUsernameInvalid && !isPasswordInvalid && !isLoading) {
       setIsLoading(true);

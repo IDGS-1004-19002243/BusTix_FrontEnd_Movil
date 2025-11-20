@@ -1,4 +1,5 @@
 import React from "react";
+import { Platform } from "react-native";
 import {
   Toast,
   ToastTitle,
@@ -22,23 +23,30 @@ export const SuccessToast: React.FC<SuccessToastProps> = ({
   closable = true,
 }) => {
   const toast = useToast();
+  const isWeb = Platform.OS === 'web';
+  
+  // Modificación en toastClass: 
+  // 1. Se elimina "w-full" en web para que el ancho se ajuste al contenido (dentro del max-w).
+  const toastClass = isWeb 
+    ? "p-4 gap-6 max-w-[386px] bg-success-500 shadow-hard-2" // Sin w-full, se ajustará al contenido hasta el max-w.
+    : "p-4 gap-6 max-w-[300px] bg-success-500 shadow-hard-2";
 
   return (
     <Toast
       action="success"
       variant="solid"
       nativeID={"toast-" + id}
-      className="p-4 gap-6 w-full max-w-[386px] bg-success-500 shadow-hard-2"
+      className={toastClass}
     >
       <HStack className="flex-row justify-between items-center">
         <HStack space="md" className="items-center">
-          <Icon as={CheckCircleIcon} className="stroke-white" />
-          <VStack space="xs">
+          <Icon as={CheckCircleIcon} size="md" className="stroke-white" />
+          <VStack space="xs" className="flex-1">
             <ToastTitle className="text-white font-semibold">
               {title}
             </ToastTitle>
             {description && (
-              <ToastDescription className="text-white/90">
+              <ToastDescription className="text-white/90" style={{ flexWrap: 'wrap' }} numberOfLines={0}>
                 {description}
               </ToastDescription>
             )}

@@ -58,7 +58,6 @@ axios.interceptors.response.use(
         // Si falla el refresh, limpiar tokens y redirigir a login
         await clearTokens();
         // Aquí podrías emitir un evento o usar un contexto para redirigir
-        console.error('Refresh token failed:', refreshError);
       }
     }
 

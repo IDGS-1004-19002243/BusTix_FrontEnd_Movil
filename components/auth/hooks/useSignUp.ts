@@ -1,5 +1,19 @@
 import { useState } from 'react';
 
+const validateEmail = (email: string) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+const validatePassword = (password: string) => {
+  const hasDigit = /\d/.test(password);
+  const hasLowercase = /[a-z]/.test(password);
+  const hasUppercase = /[A-Z]/.test(password);
+  const hasNonAlphanumeric = /[^a-zA-Z\d]/.test(password);
+  const hasMinLength = password.length >= 8;
+  return hasDigit && hasLowercase && hasUppercase && hasNonAlphanumeric && hasMinLength;
+};
+
 export const useSignUp = () => {
   const [firstName, setFirstName] = useState('');
   const [middleName, setMiddleName] = useState('');
@@ -13,22 +27,36 @@ export const useSignUp = () => {
   const [emailInvalid, setEmailInvalid] = useState(false);
   const [signUpPasswordInvalid, setSignUpPasswordInvalid] = useState(false);
   const [confirmPasswordInvalid, setConfirmPasswordInvalid] = useState(false);
+  const [signUpError, setSignUpError] = useState('');
+
+  const fullName = `${firstName} ${middleName} ${lastNameP} ${lastNameM}`.trim().replace(/\s+/g, ' ');
 
   const handleSignUp = () => {
-    const isFirstNameInvalid = firstName.trim() === '';
-    const isLastNamePInvalid = lastNameP.trim() === '';
-    const isEmailInvalid = !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    const isSignUpPasswordInvalid = password.length < 6;
-    const isConfirmPasswordInvalid = confirmPassword !== password;
+    let isFirstNameInvalid = firstName.trim() === '';
+    let isLastNamePInvalid = lastNameP.trim() === '';
+    let isEmailInvalid = !validateEmail(email);
+    let isSignUpPasswordInvalid = !validatePassword(password);
+    let isConfirmPasswordInvalid = confirmPassword !== password;
+    let errorMessage = '';
+
+    if (firstName.trim() === '') {
+      errorMessage = 'El nombre es obligatorio.';
+    } else if (lastNameP.trim() === '') {
+      errorMessage = 'El apellido paterno es obligatorio.';
+    } else if (!validateEmail(email)) {
+      errorMessage = 'El correo electrónico no es válido.';
+    } else if (!validatePassword(password)) {
+      errorMessage = 'La contraseña debe tener al menos 8 caracteres, incluyendo mayúscula, minúscula, número y símbolo.';
+    } else if (confirmPassword !== password) {
+      errorMessage = 'Las contraseñas no coinciden.';
+    }
+
     setFirstNameInvalid(isFirstNameInvalid);
     setLastNamePInvalid(isLastNamePInvalid);
     setEmailInvalid(isEmailInvalid);
     setSignUpPasswordInvalid(isSignUpPasswordInvalid);
     setConfirmPasswordInvalid(isConfirmPasswordInvalid);
-    if (!isFirstNameInvalid && !isLastNamePInvalid && !isEmailInvalid && !isSignUpPasswordInvalid && !isConfirmPasswordInvalid) {
-      // Proceed with sign up
-      console.log('Registro exitoso');
-    }
+    setSignUpError(errorMessage);
   };
 
   return {
@@ -40,6 +68,7 @@ export const useSignUp = () => {
     setLastNameP,
     lastNameM,
     setLastNameM,
+    fullName,
     email,
     setEmail,
     password,
@@ -56,6 +85,7 @@ export const useSignUp = () => {
     setSignUpPasswordInvalid,
     confirmPasswordInvalid,
     setConfirmPasswordInvalid,
+    signUpError,
     handleSignUp,
   };
 };

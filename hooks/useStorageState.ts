@@ -24,7 +24,6 @@ export async function setStorageItemAsync(key: string, value: string | null) {
         }
       }
     } catch (e) {
-      console.error('Local storage is unavailable:', e);
     }
   } else {
     if (value == null) {
@@ -42,7 +41,6 @@ export async function getStorageItemAsync(key: string): Promise<string | null> {
         return localStorage.getItem(key);
       }
     } catch (e) {
-      console.error('Local storage is unavailable:', e);
     }
     return null;
   } else {

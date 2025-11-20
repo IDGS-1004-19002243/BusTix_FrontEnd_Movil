@@ -105,7 +105,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         title: "Bienvenido",
         description: "Inicio de sesión exitoso",
         closable: false,
-        duration: 300,
+        duration: 3000,
       });
       setLoginSuccess(false);
     }

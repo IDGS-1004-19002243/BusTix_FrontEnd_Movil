@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Text, ScrollView } from 'react-native';
+import { Text, ScrollView, ImageBackground, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Modal, ModalBackdrop, ModalContent, ModalHeader, ModalBody, ModalFooter } from '@/components/ui/modal';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Heading } from '@/components/ui/heading';
@@ -7,176 +8,158 @@ import { VStack } from '@/components/ui/vstack';
 import Seo from '@/components/helpers/Seo';
 import { HStack } from '@/components/ui/hstack';
 import { Card } from '@/components/ui/card';
-import { Badge, BadgeText } from '@/components/ui/badge';
+import { Divider } from '@/components/ui/divider';
+import { useSession } from '@/context/AuthContext';
+import { useRouter } from 'expo-router';
 
 export default function HomePage() {
+  const { isAuthenticated, user } = useSession();
+  const router = useRouter();
+
+  if (!isAuthenticated) {
+    // Landing page para usuarios no autenticados
+    return (
+      <>
+        <Seo title="Bienvenido a BusTix" description="Compra boletos para los mejores eventos. Descubre conciertos, teatro y más con BusTix." />
+        <ScrollView 
+          style={{ flex: 1 }}
+          contentContainerStyle={{ padding: 24 }}
+        >
+          <VStack space="lg" className="items-center">
+            <ImageBackground
+              source={require('@/assets/images/hero-banner.jpg')}
+              resizeMode="cover"
+              style={{ width: '100%', height: 200, justifyContent: 'center', alignItems: 'center', borderRadius: 10, overflow: 'hidden' }}
+            >
+              <LinearGradient
+                colors={['rgba(0,0,0,0.6)', 'rgba(0,0,0,0.2)']}
+                style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'flex-start', paddingLeft: 24 }}
+              >
+                <Heading size="lg" className="text-left text-white">Vive experiencias musicales inolvidables</Heading>
+                <Text className="text-left text-white mt-2">
+                  Eventos de conciertos y festivales en México. Disfruta seguro, organizado y sin complicaciones.
+                </Text>
+                <Button onPress={() => router.push('/eventos')} className=" mt-4" action="positive">
+                  <ButtonText className="text-white">Explora próximos eventos</ButtonText>
+                </Button>
+              </LinearGradient>
+            </ImageBackground>
+
+            <VStack className="w-full p-6 mt-6">
+              <HStack space="sm" className="justify-center items-center mb-4">
+                <Heading size="lg" style={{color: '#00A76F', fontWeight: 'bold'}}>¿Quiénes somos?</Heading>
+              </HStack>
+              <Text className="text-gray-700 text-center">
+                  Somos BusTix, una plataforma dedicada a conectar a los amantes de la música con los mejores eventos en México. Nuestra visión es hacer que cada experiencia sea memorable, segura y accesible. Ofrecemos boletos verificados, pagos confiables y un servicio al cliente excepcional.
+              </Text>
+              <Button className="mt-4 self-center" action="positive">
+                <ButtonText className="text-white">Conoce más sobre nosotros</ButtonText>
+              </Button>
+            </VStack>
+
+            <Divider className="my-4" />
+
+            <VStack className="w-full p-6 mt-8 bg-gray-50">
+              <HStack space="sm" className="justify-center items-center mb-4">
+                <Heading size="lg" style={{color: '#00A76F', fontWeight: 'bold'}}>¿Por qué elegir BusTix?</Heading>
+              </HStack>
+              <VStack space="sm">
+                <Text className="text-gray-700">• Boletos seguros y verificados</Text>
+                <Text className="text-gray-700">• Pagos rápidos y seguros</Text>
+                <Text className="text-gray-700">• Acceso desde app móvil</Text>
+                <Text className="text-gray-700">• Eventos exclusivos y ofertas</Text>
+                <Text className="text-gray-700">• Reseñas de 5 estrellas</Text>
+                <Text className="text-gray-700">• Compra en segundos</Text>
+              </VStack>
+            </VStack>
+
+            <Divider className="my-4" />
+
+            <VStack className="w-full p-6 mt-6">
+              <HStack space="sm" className="justify-center items-center mb-4">
+                <Heading size="lg" style={{color: '#00A76F', fontWeight: 'bold'}}>¿Cómo comprar boletos?</Heading>
+              </HStack>
+              <VStack space="sm">
+                <HStack space="sm" className="items-start">
+                  <Text className="text-md font-bold text-gray-700">1.</Text>
+                  <Text className="text-gray-700">Regístrate o inicia sesión en BusTix.</Text>
+                </HStack>
+                <HStack space="sm" className="items-start">
+                  <Text className="text-md font-bold text-gray-700">2.</Text>
+                  <Text className="text-gray-700">Explora eventos y selecciona tus boletos.</Text>
+                </HStack>
+                <HStack space="sm" className="items-start">
+                  <Text className="text-md font-bold text-gray-700">3.</Text>
+                  <Text className="text-gray-700">Paga de forma segura y recibe tu entrada digital.</Text>
+                </HStack>
+              </VStack>
+            </VStack>
+
+            <Divider className="my-4" />
+
+            <VStack className="w-full p-6 mt-6 bg-gray-50">
+              <HStack space="sm" className="justify-center items-center mb-4">
+                <Heading size="lg" style={{color: '#00A76F', fontWeight: 'bold'}}>Testimonios</Heading>
+              </HStack>
+              <VStack space="md">
+                <VStack className="bg-white p-4 rounded-lg border border-gray-200">
+                  <Text className="text-gray-700 italic">"¡Increíble app! Compré boletos para un concierto en minutos."</Text>
+                  <Text className="text-gray-600 text-sm text-right mt-2">- María G.</Text>
+                </VStack>
+                <VStack className="bg-white p-4 rounded-lg border border-gray-200">
+                  <Text className="text-gray-700 italic">"Pagos seguros y eventos exclusivos. Altamente recomendado."</Text>
+                  <Text className="text-gray-600 text-sm text-right mt-2">- Juan P.</Text>
+                </VStack>
+                <VStack className="bg-white p-4 rounded-lg border border-gray-200">
+                  <Text className="text-gray-700 italic">"La mejor forma de disfrutar eventos. Fácil y rápido."</Text>
+                  <Text className="text-gray-600 text-sm text-right mt-2">- Ana L.</Text>
+                </VStack>
+                <VStack className="bg-white p-4 rounded-lg border border-gray-200">
+                  <Text className="text-gray-700 italic">"Nunca había sido tan sencillo comprar entradas."</Text>
+                  <Text className="text-gray-600 text-sm text-right mt-2">- Carlos R.</Text>
+                </VStack>
+              </VStack>
+            </VStack>
+
+            <Divider className="my-4" />
+
+            <VStack className="w-full p-6 mt-6">
+              <HStack space="sm" className="justify-center items-center mb-4">
+                <Heading size="lg" style={{color: '#00A76F', fontWeight: 'bold'}}>Preguntas Frecuentes</Heading>
+              </HStack>
+              <VStack space="sm">
+                <Text style={{color: '#00A76F', fontWeight: '600'}}>¿Qué tipos de eventos puedo encontrar?</Text>
+                <Text className="text-gray-600 text-sm">Conciertos, teatro, deportes, festivales y más. Siempre actualizando con nuevos eventos.</Text>
+                <Text style={{color: '#00A76F', fontWeight: '600'}} mt-4>¿Hay descuentos disponibles?</Text>
+                <Text className="text-gray-600 text-sm">Sí, ofertas exclusivas, descuentos para estudiantes y promociones especiales.</Text>
+                <Text style={{color: '#00A76F', fontWeight: '600'}} mt-4>¿Puedo transferir mis boletos?</Text>
+                <Text className="text-gray-600 text-sm">Dependiendo del evento, puedes transferir boletos a través de la app.</Text>
+              </VStack>
+            </VStack>
+
+          </VStack>
+        </ScrollView>
+      </>
+    );
+  }
+
+  // Página para usuarios autenticados
   return (
     <>
-      <Seo title="Inicio" description="Panel de control de BusTix: eventos, ventas y estadísticas." />
+      <Seo title="Inicio" description="Bienvenido de vuelta a BusTix." />
       <ScrollView 
         style={{ flex: 1 }}
-        contentContainerStyle={{ padding: 24 }}
+        contentContainerStyle={{ padding: 24, justifyContent: 'center', flex: 1 }}
       >
-        <VStack space="lg">
-          <Heading size="xl" className="text-center text-black">Bienvenido a BusTix 👋</Heading>
-          <Text className="text-center text-black mb-4">
-            Gestiona tus eventos y boletos de manera fácil y rápida
+        <VStack space="lg" className="items-center">
+          <Heading size="xl" className="text-center text-black">
+            Hola de nuevo {user?.name || 'Usuario'}, gusto en tenerte de vuelta!
+          </Heading>
+          <Text className="text-center text-gray-600">
+            Explora tus eventos y gestiona tus boletos desde aquí.
           </Text>
-
-          <HStack space="md" className="flex-wrap justify-center">
-            <Card className="flex-1 min-w-[120px] max-w-[140px] bg-blue-50 border-blue-200 border-2">
-              <VStack className="p-3 items-center">
-                <Text className="text-2xl font-bold text-black">15</Text>
-                <Text className="text-xs text-black text-center">Eventos Activos</Text>
-              </VStack>
-            </Card>
-            <Card className="flex-1 min-w-[120px] max-w-[140px] bg-green-50 border-green-200 border-2">
-              <VStack className="p-3 items-center">
-                <Text className="text-2xl font-bold text-black">1,200</Text>
-                <Text className="text-xs text-black text-center">Boletos Vendidos</Text>
-              </VStack>
-            </Card>
-            <Card className="flex-1 min-w-[120px] max-w-[140px] bg-purple-50 border-purple-200 border-2">
-              <VStack className="p-3 items-center">
-                <Text className="text-2xl font-bold text-black">8</Text>
-                <Text className="text-xs text-black text-center">Usuarios Registrados</Text>
-              </VStack>
-            </Card>
-            <Card className="flex-1 min-w-[120px] max-w-[140px] bg-orange-50 border-orange-200 border-2">
-              <VStack className="p-3 items-center">
-                <Text className="text-xl font-bold text-black">$45,000</Text>
-                <Text className="text-xs text-black text-center">Ingresos Totales</Text>
-              </VStack>
-            </Card>
-          </HStack>
-        
-          <Card className="bg-white border-2 border-gray-300">
-            <VStack className="p-6">
-              <Heading size="lg" className="text-black mb-2">📅 Eventos Próximos</Heading>
-              <Text className="text-gray-700 mb-4">No te pierdas estos eventos emocionantes</Text>
-              <VStack space="sm">
-                <HStack className="justify-between items-center bg-gray-50 rounded-lg p-3 border border-gray-200">
-                  <VStack>
-                    <Text className="text-black font-semibold">Concierto de Rock</Text>
-                    <Text className="text-gray-600 text-sm">15 Nov, 8:00 PM - Estadio Nacional</Text>
-                  </VStack>
-                  <Badge action="success" size="sm">
-                    <BadgeText>Disponible</BadgeText>
-                  </Badge>
-                </HStack>
-                <HStack className="justify-between items-center bg-gray-50 rounded-lg p-3 border border-gray-200">
-                  <VStack>
-                    <Text className="text-black font-semibold">Festival de Jazz</Text>
-                    <Text className="text-gray-600 text-sm">22 Nov, 7:00 PM - Parque Central</Text>
-                  </VStack>
-                  <Badge action="warning" size="sm">
-                    <BadgeText>Últimas entradas</BadgeText>
-                  </Badge>
-                </HStack>
-                <HStack className="justify-between items-center bg-gray-50 rounded-lg p-3 border border-gray-200">
-                  <VStack>
-                    <Text className="text-black font-semibold">Teatro Musical</Text>
-                    <Text className="text-gray-600 text-sm">30 Nov, 6:00 PM - Teatro Principal</Text>
-                  </VStack>
-                  <Badge action="info" size="sm">
-                    <BadgeText>Nuevo</BadgeText>
-                  </Badge>
-                </HStack>
-                <HStack className="justify-between items-center bg-gray-50 rounded-lg p-3 border border-gray-200">
-                  <VStack>
-                    <Text className="text-black font-semibold">Ballet Clásico</Text>
-                    <Text className="text-gray-600 text-sm">10 Nov, 5:00 PM - Teatro de la Ópera</Text>
-                  </VStack>
-                  <Badge action="muted" size="sm">
-                    <BadgeText>Próximo</BadgeText>
-                  </Badge>
-                </HStack>
-              </VStack>
-            </VStack>
-          </Card>
-
-          <Card className="bg-white border-2 border-gray-300">
-            <VStack className="p-6">
-              <Heading size="lg" className="text-black mb-2">🎟️ Ofertas Especiales</Heading>
-              <Text className="text-gray-700 mb-4">Aprovecha estas promociones exclusivas</Text>
-              <VStack space="sm">
-                <HStack className="justify-between items-center bg-gray-50 rounded-lg p-3 border border-gray-200">
-                  <VStack>
-                    <Text className="text-black font-semibold">20% descuento en boletos dobles</Text>
-                    <Text className="text-gray-600 text-sm">Válido hasta fin de mes</Text>
-                  </VStack>
-                  <Badge action="success" size="sm">
-                    <BadgeText>Activo</BadgeText>
-                  </Badge>
-                </HStack>
-                <HStack className="justify-between items-center bg-gray-50 rounded-lg p-3 border border-gray-200">
-                  <VStack>
-                    <Text className="text-black font-semibold">Entrada gratis para estudiantes</Text>
-                    <Text className="text-gray-600 text-sm">Presenta credencial universitaria</Text>
-                  </VStack>
-                  <Badge action="info" size="sm">
-                    <BadgeText>Limitado</BadgeText>
-                  </Badge>
-                </HStack>
-                <HStack className="justify-between items-center bg-gray-50 rounded-lg p-3 border border-gray-200">
-                  <VStack>
-                    <Text className="text-black font-semibold">Paquete familiar con 15% off</Text>
-                    <Text className="text-gray-600 text-sm">Mínimo 4 personas, máximo descuento $50</Text>
-                  </VStack>
-                  <Badge action="warning" size="sm">
-                    <BadgeText>Popular</BadgeText>
-                  </Badge>
-                </HStack>
-                <HStack className="justify-between items-center bg-gray-50 rounded-lg p-3 border border-gray-200">
-                  <VStack>
-                    <Text className="text-black font-semibold">Compra anticipada 10% descuento</Text>
-                    <Text className="text-gray-600 text-sm">Reservaciones con 15 días de anticipación</Text>
-                  </VStack>
-                  <Badge action="muted" size="sm">
-                    <BadgeText>Nuevo</BadgeText>
-                  </Badge>
-                </HStack>
-              </VStack>
-            </VStack>
-          </Card>
-
-          <HStack space="md" className="flex-wrap">
-            <Card className="flex-1 min-w-[200px] border-2 border-gray-300">
-              <VStack className="p-4">
-                <Heading size="md" className="mb-2 text-black">🎪 Eventos Destacados</Heading>
-                <VStack space="sm">
-                  <Text className="text-sm text-black">• Ballet Clásico - 10 Nov</Text>
-                  <Text className="text-sm text-black">• Stand Up Comedy - 18 Nov</Text>
-                  <Text className="text-sm text-black">• Ópera Italiana - 25 Nov</Text>
-                  <Text className="text-sm text-black">• Concierto Sinfónico - 5 Dic</Text>
-                </VStack>
-              </VStack>
-            </Card>
-            <Card className="flex-1 min-w-[200px] border-2 border-gray-300">
-              <VStack className="p-4">
-                <Heading size="md" className="mb-2 text-black">💰 Ofertas del Mes</Heading>
-                <VStack space="sm">
-                  <Text className="text-sm text-black">• Compra 3, paga 2</Text>
-                  <Text className="text-sm text-black">• 30% descuento para grupos</Text>
-                  <Text className="text-sm text-black">• Boleto VIP con cena incluida</Text>
-                  <Text className="text-sm text-black">• Membresía anual con beneficios</Text>
-                </VStack>
-              </VStack>
-            </Card>
-            <Card className="flex-1 min-w-[200px] border-2 border-gray-300">
-              <VStack className="p-4">
-                <Heading size="md" className="mb-2 text-black">📊 Estadísticas</Heading>
-                <VStack space="sm">
-                  <Text className="text-sm text-black">• Satisfacción del cliente: 95%</Text>
-                  <Text className="text-sm text-black">• Eventos este mes: 12</Text>
-                  <Text className="text-sm text-black">• Nuevos usuarios: 45</Text>
-                  <Text className="text-sm text-black">• Ciudades cubiertas: 8</Text>
-                </VStack>
-              </VStack>
-            </Card>
-          </HStack>
         </VStack>
-    </ScrollView>
+      </ScrollView>
     </>
   );
 }

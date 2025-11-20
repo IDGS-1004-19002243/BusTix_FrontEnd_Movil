@@ -21,7 +21,6 @@ export function categorizeError(error: any): ApiError {
 
     // Errores del cliente (4xx) - mostrar mensaje específico del backend
     if (status >= 400 && status < 500) {
-      console.log('Client error detected:', status);
       return {
         type: ErrorType.CLIENT_ERROR,
         message: serverMessage || 'Datos incorrectos. Verifica tu información',

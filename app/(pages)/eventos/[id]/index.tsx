@@ -2,17 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView } from 'react-native';
 import { VStack } from '@/components/ui/vstack';
 import { HStack } from '@/components/ui/hstack';
-import { Card } from '@/components/ui/card';
+import { Button, ButtonText, ButtonIcon } from '@/components/ui/button';
 import { Heading } from '@/components/ui/heading';
-import { Badge, BadgeText } from '@/components/ui/badge';
-import { Button, ButtonText } from '@/components/ui/button';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Modal, ModalBackdrop, ModalContent, ModalCloseButton, ModalHeader, ModalBody, ModalFooter } from '@/components/ui/modal';
 import { Alert, AlertText, AlertIcon } from '@/components/ui/alert';
-import { InfoIcon } from '@/components/ui/icon';
-import { Input, InputField } from '@/components/ui/input';
-import { initialEvents, Event } from '../eventsData';
+import { InfoIcon, ArrowLeftIcon } from '@/components/ui/icon';
+import { apiGetEventoById } from '@/services/eventos';
+import { Event } from '@/services/eventos/eventos.types';
 import Seo from '@/components/helpers/Seo';
+import EventDetailCard from '@/components/eventos/EventDetailCard';
+import { Spinner } from '@/components/ui/spinner';
+import { ShareIcon, FavouriteIcon } from '@/components/ui/icon';
 
 export default function EventDetailPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -20,6 +21,9 @@ export default function EventDetailPage() {
   const [showModal, setShowModal] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [quantity, setQuantity] = useState(0);
+  const [event, setEvent] = useState<Event | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (showSuccess) {
@@ -28,53 +32,63 @@ export default function EventDetailPage() {
     }
   }, [showSuccess]);
 
-  const event = initialEvents.find((e: Event) => e.id === id);
+  useEffect(() => {
+    const fetchEvent = async () => {
+      if (!id) return;
+      
+      try {
+        setLoading(true);
+        setError(null);
+        const eventData = await apiGetEventoById(id);
+        setEvent(eventData);
+      } catch (err: any) {
+        console.error('Error fetching event:', err);
+        setError(err.message || 'Error al cargar el evento');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  if (!event) {
+    fetchEvent();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <View className="flex-1 justify-center items-center p-6">
+        <Spinner size="large" color="green" />
+        <Text className="text-lg text-gray-600 mt-4">Cargando evento...</Text>
+      </View>
+    );
+  }
+
+  if (error || !event) {
     return (
       <View className="flex-1 justify-center items-center p-6">
         <Seo title="Evento no encontrado" description="El evento solicitado no existe." />
-        <Text className="text-xl text-gray-600">Evento no encontrado</Text>
-        <Button onPress={() => router.back()} className="mt-4">
+        <Text className="text-xl text-gray-600">{error || 'Evento no encontrado'}</Text>
+        <Button onPress={() => router.push('/eventos')} className="mt-4">
           <ButtonText>Volver</ButtonText>
         </Button>
       </View>
     );
   }
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
-
-  const getCategoryColor = (category: string) => {
-    const colors: Record<string, 'success' | 'info' | 'warning' | 'error' | 'muted'> = {
-      'Música': 'success',
-      'Teatro': 'info',
-      'Danza': 'warning',
-      'Comedia': 'error',
-      'Ópera': 'muted',
-    };
-    return colors[category] || 'muted';
-  };
-
   return (
-    <ScrollView 
-      style={{ flex: 1 }}
-      contentContainerStyle={{ padding: 24 }}
-    >
-      <Seo title={event.name} description={event.description} />
-      <VStack space="lg">
-        <Button onPress={() => router.back()} variant="outline" className="self-start">
-          <ButtonText>← Volver</ButtonText>
+    <View className="flex-1">
+      <Seo title={event.nombre} description={event.descripcion} />
+      <View className="p-6">
+        <Button onPress={() => router.push('/eventos')} variant="outline" className="self-start" size="sm">
+          <ButtonIcon as={ArrowLeftIcon} />
+          <ButtonText>Volver</ButtonText>
         </Button>
+      </View>
 
+      <ScrollView 
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 24 }}
+      >
         {showSuccess && (
-          <Alert action="success" variant="solid">
+          <Alert action="success" variant="solid" className="mb-4">
             <AlertIcon as={InfoIcon} />
             <AlertText>
               ¡Compra exitosa! {quantity} boleto(s) reservado(s).
@@ -82,67 +96,36 @@ export default function EventDetailPage() {
           </Alert>
         )}
 
-        <Card className="bg-white shadow-lg">
-          <VStack className="p-6">
-            <Heading size="xl" className="mb-4">{event.name}</Heading>
-            
-            <Badge action={getCategoryColor(event.category)} size="md" className="self-start mb-4">
-              <BadgeText>{event.category}</BadgeText>
-            </Badge>
+        <EventDetailCard event={event} />
+      </ScrollView>
 
-            <VStack space="md" className="mb-6">
-              <HStack className="justify-between">
-                <Text className="text-lg font-semibold">📅 Fecha:</Text>
-                <Text className="text-lg">{formatDate(event.date)}</Text>
-              </HStack>
-              <HStack className="justify-between">
-                <Text className="text-lg font-semibold">⏰ Hora:</Text>
-                <Text className="text-lg">{event.time}</Text>
-              </HStack>
-              <HStack className="justify-between">
-                <Text className="text-lg font-semibold">📍 Ubicación:</Text>
-                <Text className="text-lg">{event.location}</Text>
-              </HStack>
-              <HStack className="justify-between">
-                <Text className="text-lg font-semibold">💰 Precio:</Text>
-                <Text className="text-2xl font-bold text-green-600">${event.price}</Text>
-              </HStack>
-              <HStack className="justify-between">
-                <Text className="text-lg font-semibold">🎫 Boletos disponibles:</Text>
-                <Text className="text-lg">{event.availableTickets}</Text>
-              </HStack>
-            </VStack>
-
-            <Text className="text-gray-700 text-lg leading-6 mb-6">{event.description}</Text>
-
-            <HStack className="justify-between items-center">
-              <Badge 
-                action={event.availableTickets > 50 ? 'success' : event.availableTickets > 20 ? 'warning' : 'error'} 
-                size="lg"
-              >
-                <BadgeText>
-                  {event.availableTickets > 50 ? 'Disponible' : event.availableTickets > 20 ? 'Últimas entradas' : 'Agotándose'}
-                </BadgeText>
-              </Badge>
-              <Button size="lg" onPress={() => setShowModal(true)}>
-                <ButtonText>Comprar Boleto</ButtonText>
-              </Button>
-            </HStack>
-          </VStack>
-        </Card>
-      </VStack>
+      <View className="bg-white p-4 rounded-lg">
+        <HStack className="justify-between items-center">
+          <HStack space="sm">
+            <Button size="lg" variant="outline" className="rounded-full p-3.5" onPress={() => {}}>
+              <ButtonIcon as={ShareIcon} />
+            </Button>
+            <Button size="lg" variant="outline" className="rounded-full p-3.5" onPress={() => {}}>
+              <ButtonIcon as={FavouriteIcon} />
+            </Button>
+          </HStack>
+          <Button size="lg" onPress={() => setShowModal(true)} disabled={event.estatus !== 1}>
+            <ButtonText>Reservar Viaje</ButtonText>
+          </Button>
+        </HStack>
+      </View>
 
       <Modal isOpen={showModal} onClose={() => setShowModal(false)}>
         <ModalBackdrop />
         <ModalContent>
           <ModalHeader>
-            <Heading size="md">Comprar Boleto</Heading>
+            <Heading size="md">Reservar Viaje</Heading>
             <ModalCloseButton onPress={() => setShowModal(false)}>
               <Text>✕</Text>
             </ModalCloseButton>
           </ModalHeader>
           <ModalBody>
-            <Text className="text-lg mb-4">¿Confirmas la compra de boletos para {event.name}?</Text>
+            <Text className="text-lg mb-4">¿Confirmas la reserva de viaje para {event.nombre}?</Text>
             <VStack space="md" className="mb-4">
               <HStack className="items-center justify-center space-x-4">
                 <Button 
@@ -164,9 +147,6 @@ export default function EventDetailPage() {
                 </Button>
               </HStack>
             </VStack>
-            <Text className="text-lg font-semibold">
-              Precio total: ${event.price * quantity}
-            </Text>
           </ModalBody>
           <ModalFooter>
             <Button variant="outline" onPress={() => setShowModal(false)} className="mr-2">
@@ -176,11 +156,11 @@ export default function EventDetailPage() {
               setShowModal(false);
               setShowSuccess(true);
             }}>
-              <ButtonText>Confirmar Compra</ButtonText>
+              <ButtonText>Confirmar Reserva</ButtonText>
             </Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
-    </ScrollView>
+    </View>
   );
 }

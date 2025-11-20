@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Platform } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { Input, InputField } from '@/components/ui/input';
-import { Button, ButtonText, ButtonIcon } from '@/components/ui/button';
+import { Button, ButtonText, ButtonIcon, ButtonSpinner } from '@/components/ui/button';
 import { ChevronLeftIcon } from '@/components/ui/icon';
 import {
   FormControl,
@@ -15,7 +15,24 @@ import { AlertCircleIcon } from '@/components/ui/icon';
 import { VStack } from '@/components/ui/vstack';
 import { router } from 'expo-router';
 import { useSignUp } from '../hooks/useSignUp';
-import { useSession } from '@/context/AuthContext';
+import { apiRegister } from '@/services/auth/auth.service';
+import { RegisterDto } from '@/services/auth/auth.types';
+import { useToastManager } from '@/components/toast';
+import { categorizeError } from '@/services/api-errors';
+
+const validateEmail = (email: string) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+const validatePassword = (password: string) => {
+  const hasDigit = /\d/.test(password);
+  const hasLowercase = /[a-z]/.test(password);
+  const hasUppercase = /[A-Z]/.test(password);
+  const hasNonAlphanumeric = /[^a-zA-Z\d]/.test(password);
+  const hasMinLength = password.length >= 8;
+  return hasDigit && hasLowercase && hasUppercase && hasNonAlphanumeric && hasMinLength;
+};
 
 interface SignUpFormProps {
   onSwitchToLogin: () => void;
@@ -26,12 +43,66 @@ export default function SignUpForm({ onSwitchToLogin }: SignUpFormProps) {
   const isWeb = platform === 'web';
   const inputHeightClass = isWeb ? 'h-8' : 'h-8';
   const signUp = useSignUp();
-  const { signIn } = useSession();
+  const [loading, setLoading] = useState(false);
+  const { showToast } = useToastManager();
 
-  const handleSignUp = () => {
-    signUp.handleSignUp();
-    if (!signUp.firstNameInvalid && !signUp.lastNamePInvalid && !signUp.emailInvalid && !signUp.signUpPasswordInvalid && !signUp.confirmPasswordInvalid) {
-      signIn(signUp.email, signUp.password);
+  const handleSignUp = async () => {
+    const isFirstNameInvalid = signUp.firstName.trim() === '';
+    const isLastNamePInvalid = signUp.lastNameP.trim() === '';
+    const isEmailInvalid = !validateEmail(signUp.email);
+    const isSignUpPasswordInvalid = !validatePassword(signUp.password);
+    const isConfirmPasswordInvalid = signUp.confirmPassword !== signUp.password;
+
+    signUp.setFirstNameInvalid(isFirstNameInvalid);
+    signUp.setLastNamePInvalid(isLastNamePInvalid);
+    signUp.setEmailInvalid(isEmailInvalid);
+    signUp.setSignUpPasswordInvalid(isSignUpPasswordInvalid);
+    signUp.setConfirmPasswordInvalid(isConfirmPasswordInvalid);
+
+    if (!isFirstNameInvalid && !isLastNamePInvalid && !isEmailInvalid && !isSignUpPasswordInvalid && !isConfirmPasswordInvalid) {
+      setLoading(true);
+      try {
+        const registerDto: RegisterDto = {
+          EmailAddress: signUp.email,
+          Password: signUp.password,
+          NombreCompleto: signUp.fullName,
+          TipoDocumento: 'DNI', // Default
+          NumeroDocumento: '', // Not in form
+          Roles: ['User']
+        };
+        const response = await apiRegister(registerDto);
+        if (response.isSuccess) {
+          showToast({
+            type: "success",
+            title: "Éxito",
+            description: response.message,
+            closable: false,
+            duration: 3000,
+          });
+          onSwitchToLogin();
+        } else {
+          showToast({
+            type: "error",
+            title: "Error",
+            description: response.message || 'Error en el registro',
+            closable: false,
+            duration: 3000,
+          });
+        }
+      } catch (error: any) {
+        const apiError = categorizeError(error);
+        if (apiError.type !== 'NETWORK_ERROR') {
+          showToast({
+            type: "error",
+            title: "Error",
+            description: apiError.message,
+            closable: false,
+            duration: 3000,
+          });
+        }
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -117,6 +188,11 @@ export default function SignUpForm({ onSwitchToLogin }: SignUpFormProps) {
                   <InputField
                     placeholder="Contraseña"
                     value={signUp.password}
+                    // Flujo de envío y recepción de datos:
+                    // 1. Usuario escribe en el input -> onChangeText recibe el texto
+                    // 2. setPassword(text) actualiza el estado en useSignUp
+                    // 3. Si estaba inválido, setSignUpPasswordInvalid(false) resetea el error
+                    // 4. Al enviar formulario, handleSignUp llama validatePassword(signUp.password) para validar
                     onChangeText={(text) => {
                       signUp.setPassword(text);
                       if (signUp.signUpPasswordInvalid) signUp.setSignUpPasswordInvalid(false);
@@ -127,7 +203,7 @@ export default function SignUpForm({ onSwitchToLogin }: SignUpFormProps) {
                 <FormControlError>
                   <FormControlErrorIcon as={AlertCircleIcon} className="text-red-500" />
                   <FormControlErrorText className="text-red-500">
-                    Se requieren al menos 6 caracteres.
+                    La contraseña debe tener al menos 8 caracteres, incluyendo mayúscula, minúscula, número y símbolo.
                   </FormControlErrorText>
                 </FormControlError>
               </FormControl>
@@ -151,8 +227,18 @@ export default function SignUpForm({ onSwitchToLogin }: SignUpFormProps) {
                 </FormControlError>
               </FormControl>
             </VStack>
-            <Button size="sm" variant="solid" className="w-full mt-4 mb-3" onPress={handleSignUp}>
-              <ButtonText className="text-white">Registrarse</ButtonText>
+            <Button
+              size="sm"
+              variant="solid"
+              className="w-full mt-4 mb-3"
+              onPress={handleSignUp}
+              isDisabled={loading}
+            >
+              {loading ? (
+                <ButtonSpinner color="white" />
+              ) : (
+                <ButtonText className="text-white">Registrarse</ButtonText>
+              )}
             </Button>
             <View >
               <Button variant="link" size="md" onPress={onSwitchToLogin} style={{marginRight:22}}>
