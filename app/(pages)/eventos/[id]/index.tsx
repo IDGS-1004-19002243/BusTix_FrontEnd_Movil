@@ -150,7 +150,7 @@ export default function EventDetailPage() {
               <ButtonIcon as={FavouriteIcon} />
             </Button>
           </HStack>
-          <View className="flex flex-row items-center gap-8">
+          <View className="flex flex-row items-center gap-3">
             <Text className="text-lg">
               <Text className="font-bold">Desde:</Text> $ 680
             </Text>
