@@ -35,6 +35,7 @@
     "clsx": "^2.1.1",
     "dom-helpers": "^5.2.1",
     "expo": "54.0.21",
+    "expo-barcode-scanner": "~12.4.0",
     "expo-constants": "~18.0.10",
     "expo-font": "~14.0.9",
     "expo-image": "^3.0.10",

@@ -35,6 +35,7 @@ const getRoleBadgeAction = (role: string) => {
   const roleColors = {
     admin: "info",
     manager: "warning",
+    staff: "info",
     user: "success",
   } as const;
 
