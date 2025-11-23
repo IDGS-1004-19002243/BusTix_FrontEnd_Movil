@@ -1,6 +1,37 @@
-{
-  "expo": {
-    "name": "BusTix",
+import { ConfigContext, ExpoConfig } from '@expo/config';
+import { get } from 'react-native/Libraries/TurboModule/TurboModuleRegistry';
+
+const IS_DEV = process.env.APP_VARIANT === 'development';
+const IS_PREVIEW = process.env.APP_VARIANT === 'preview';
+
+const getUniqueIdentifier = () => {
+  if (IS_DEV) {
+    return 'com.alexisduran01.bustix.dev';
+  }
+
+  if (IS_PREVIEW) {
+    return 'com.alexisduran01.bustix.preview';
+  }
+
+  return 'com.alexisduran01.bustix';
+};
+
+const getAppName = () => {
+  if (IS_DEV) {
+    return 'BusTix (Dev)';
+  }
+
+  if (IS_PREVIEW) {
+    return 'BusTix';
+  }
+
+  return 'BusTix-1';
+};
+
+
+  export default ({ config }:ConfigContext ):ExpoConfig => ({
+    ...config,
+    "name": getAppName(),
     "slug": "bustix",
     "version": "1.0.0",
     "orientation": "default",
@@ -19,6 +50,7 @@
     },
     "ios": {
       "supportsTablet": true,
+      "bundleIdentifier": getUniqueIdentifier(),
       "config": {
         "usesNonExemptEncryption": false
       },
@@ -34,7 +66,8 @@
         "monochromeImage": "./assets/icons/adaptive-icon.png",
         "backgroundColor": "#0F0F0F"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": getUniqueIdentifier()
     },
     "web": {
       "bundler": "metro",
@@ -50,6 +83,12 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
-  }
-}
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "5a12ed16-9520-4b3a-9a8c-e32078ced47f"
+      }
+    },
+    "owner": "alexisduran01"
+  });
