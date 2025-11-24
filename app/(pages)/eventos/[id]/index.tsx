@@ -1,21 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, ScrollView } from "react-native";
-import { VStack } from "@/components/ui/vstack";
 import { HStack } from "@/components/ui/hstack";
 import { Button, ButtonText, ButtonIcon } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSession } from "@/context/AuthContext";
+import { usePurchase, generateSessionToken } from "@/context/PurchaseContext";
 import {
-  Modal,
-  ModalBackdrop,
-  ModalContent,
-  ModalCloseButton,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-} from "@/components/ui/modal";
-import { Alert, AlertText, AlertIcon } from "@/components/ui/alert";
+  Alert,
+  AlertText,
+  AlertIcon,
+} from "@/components/ui/alert";
 import {
   InfoIcon,
   ArrowLeftIcon,
@@ -26,16 +21,19 @@ import { apiGetEventoById } from "@/services/eventos";
 import { Event } from "@/services/eventos/eventos.types";
 import Seo from "@/components/helpers/Seo";
 import EventDetailCard from "@/components/eventos/EventDetailCard";
+import ReserveModal from "@/components/eventos/ReserveModal";
+import AuthModal from "@/components/eventos/AuthModal";
 import { Spinner } from "@/components/ui/spinner";
 
 export default function EventDetailPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { isAuthenticated } = useSession();
+  const { setPurchaseData } = usePurchase();
   const [showModal, setShowModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [quantity, setQuantity] = useState(0);
+  const [quantity, setQuantity] = useState(1);
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -73,7 +71,70 @@ export default function EventDetailPage() {
     } else {
       setShowModal(true);
     }
-  };  if (loading) {
+  };
+
+  const handleConfirm = () => {
+    if (!event) return; // Asegurar que event no sea null
+
+    // PASO 1: Validar que se haya seleccionado al menos 1 boleto
+    if (quantity < 1) {
+      // Si no hay boletos seleccionados, no hacer nada
+      // TODO: Mostrar alerta al usuario indicando que debe seleccionar al menos 1 boleto
+      return;
+    }
+    
+    // PASO 2: Guardar la información de compra en el contexto
+    // Esto permite compartir los datos entre esta página y la página de compra
+    // Los datos expiran en 10 minutos
+    // Si se reinicia la app, los datos se pierden
+    
+    // Generar token único de sesión para esta compra
+    const sessionToken = generateSessionToken();
+    
+    // Convertir el nombre del evento a formato slug 
+    // Ejemplo: "Copa Mundial FIFA 2026" → "copa-mundial-fifa-2026"
+    const eventSlug = event.nombre
+      .toLowerCase()                  // Convertir a minúsculas
+      .normalize('NFD')               // Descomponer caracteres con acentos
+      .replace(/[\u0300-\u036f]/g, '') // Eliminar acentos
+      .replace(/[^a-z0-9\s-]/g, '')   // Solo letras, números, espacios y guiones
+      .replace(/\s+/g, '-')           // Espacios a guiones
+      .replace(/-+/g, '-')            // Múltiples guiones a uno solo
+      .replace(/^-|-$/g, '');         // Quitar guiones al inicio/fin
+    
+    setPurchaseData({
+      eventId: event.eventoID.toString(),  // ID del evento convertido a string
+      eventSlug: eventSlug,                // Nombre en formato URL (slug)
+      eventName: event.nombre,             // Nombre del evento
+      eventImage: event.urlImagen || '',   // URL de la imagen del evento
+      quantity: quantity,                  // Cantidad de boletos seleccionados
+      pricePerTicket: 680,                 // Precio por boleto (hardcoded por ahora)
+      sessionToken: sessionToken,          // Token único para validar en URL
+      timestamp: Date.now(),               // Timestamp se añade automáticamente en setPurchaseData
+    });
+    
+    // PASO 3: Cerrar el modal de confirmación
+    setShowModal(false);
+    
+    // PASO 4: Navegar a la página de compra con eventSlug y token en la URL
+    // Formato: /compra/[eventSlug]?token=[sessionToken]
+    // Ejemplo: /compra/copa-mundial-fifa-2026?token=a3f9d2e1b4c8f7
+    // 
+    // Esto permite:
+    // - Ver en la URL qué evento se está comprando
+    // - Validar que el usuario tenga un token válido
+    // - Prevenir acceso directo sin pasar por el flujo correcto
+    // 
+    router.push({
+      pathname: '/compra/[slug]',
+      params: { 
+        slug: eventSlug,
+        token: sessionToken 
+      }
+    });
+  }; 
+  
+  if (loading) {
     return (
       <View className="flex-1 justify-center items-center p-6">
         <Spinner size="large" color="green" />
@@ -159,100 +220,29 @@ export default function EventDetailPage() {
               onPress={handleReserve}
               disabled={event.estatus !== 1}
             >
-              <ButtonText>Reservar Viaje</ButtonText>
+              <ButtonText>Reservar</ButtonText>
             </Button>
           </View>
         </HStack>
       </View>
 
-      <Modal isOpen={showModal} onClose={() => setShowModal(false)}>
-        <ModalBackdrop />
-        <ModalContent>
-          <ModalHeader>
-            <Heading size="md">Reservar Viaje</Heading>
-            <ModalCloseButton onPress={() => setShowModal(false)}>
-              <Text>✕</Text>
-            </ModalCloseButton>
-          </ModalHeader>
-          <ModalBody>
-            <Text className="text-lg mb-4">
-              ¿Confirmas la reserva de viaje para {event.nombre}?
-            </Text>
-            <VStack space="md" className="mb-4">
-              <HStack className="items-center justify-center space-x-4">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onPress={() => setQuantity(Math.max(0, quantity - 1))}
-                  className="mr-2"
-                >
-                  <ButtonText>-</ButtonText>
-                </Button>
-                <Text className="text-lg font-semibold">
-                  {quantity} boleto(s)
-                </Text>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onPress={() => setQuantity(quantity + 1)}
-                  className="ml-2"
-                >
-                  <ButtonText>+</ButtonText>
-                </Button>
-              </HStack>
-            </VStack>
-          </ModalBody>
-          <ModalFooter>
-            <Button
-              variant="outline"
-              onPress={() => setShowModal(false)}
-              className="mr-2"
-            >
-              <ButtonText>Cancelar</ButtonText>
-            </Button>
-            <Button
-              onPress={() => {
-                setShowModal(false);
-                setShowSuccess(true);
-              }}
-            >
-              <ButtonText>Confirmar Reserva</ButtonText>
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+      <ReserveModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        event={event}
+        quantity={quantity}
+        onQuantityChange={setQuantity}
+        onConfirm={handleConfirm}
+      />
 
-      <Modal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)}>
-        <ModalBackdrop />
-        <ModalContent>
-          <ModalHeader>
-            <Heading size="md">Iniciar Sesión</Heading>
-            <ModalCloseButton onPress={() => setShowAuthModal(false)}>
-              <Text>✕</Text>
-            </ModalCloseButton>
-          </ModalHeader>
-          <ModalBody>
-            <Text className="text-lg mb-4">
-              Para realizar una compra hay que iniciar sesión o registrarse.
-            </Text>
-          </ModalBody>
-          <ModalFooter>
-            <Button
-              variant="outline"
-              onPress={() => setShowAuthModal(false)}
-              className="mr-2"
-            >
-              <ButtonText>Cancelar</ButtonText>
-            </Button>
-            <Button onPress={() => {
-              setShowAuthModal(false);
-              setTimeout(() => router.push("/sign-in"), 400);
-            }}>
-              <ButtonText>Ir a Iniciar Sesión</ButtonText>
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onLogin={() => {
+          setShowAuthModal(false);
+          setTimeout(() => router.push("/sign-in"), 400);
+        }}
+      />
     </View>
   );
 }

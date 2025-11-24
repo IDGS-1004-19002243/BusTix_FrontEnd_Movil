@@ -11,6 +11,7 @@ import { Stack, usePathname } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SessionProvider } from "@/context/AuthContext";
+import { PurchaseProvider } from "@/context/PurchaseContext";
 import { SplashScreenController } from "@/components/auth/screens/splash";
 import '@/services/auth/interceptors'; // Importar para configurar axios interceptores
 import LoadingTransition from "@/components/transition/LoadingTransition";
@@ -30,10 +31,19 @@ function RootLayoutNav() {
   const pathname = usePathname();
   const [colorMode, setColorMode] = useState<"light" | "dark">("light");
 
+  /*
+   * ESTRUCTURA DE PROVEEDORES (de afuera hacia adentro):
+   * 1. GluestackUIProvider → Sistema de UI y temas (light/dark)
+   * 2. SessionProvider → Autenticación (login/logout, persiste datos)
+   * 3. PurchaseProvider → Datos temporales de compra (10 min, no persiste)
+   */
+
   return (
-    <GluestackUIProvider mode={colorMode}>
-      <SessionProvider>
-        <AppContent colorMode={colorMode} />
+    <GluestackUIProvider mode={colorMode}> 
+      <SessionProvider> 
+        <PurchaseProvider>
+          <AppContent colorMode={colorMode} />
+        </PurchaseProvider>
       </SessionProvider>
     </GluestackUIProvider>
   );
@@ -46,16 +56,13 @@ function AppContent({ colorMode }: { colorMode: "light" | "dark" }) {
     <>
       <SplashScreenController />
       {isTransitioning && (
-        // View que actúa como contenedor absoluto para la transición de carga.
-        // Se muestra solo cuando isTransitioning es true, cubriendo toda la pantalla para evitar flashes del contenido.
         <View style={{
-          position: 'absolute', // Posiciona la vista de manera absoluta, permitiendo superponerla sobre otros elementos sin afectar el layout normal.
-          top: 0, // "Borde superior" se refiere a la linea superior del view. Valor 0 lo pega al borde superior del contenedor padre (pantalla), sin separación.
+          position: 'absolute', 
+          top: 0,
           left: 0, 
           right: 0, 
           bottom: 0, 
-          // Al usar 0 en los cuatro lados, la vista se estira para ocupar todo el ancho y alto disponible, cubriendo completamente la pantalla como un overlay.
-          zIndex: 999 // Establece un índice Z alto para asegurar que la vista esté encima de todos los demás elementos en la pantalla.
+          zIndex: 999 
         }}>
           <LoadingTransition duration={2000} onComplete={() => setTransition(false)} />
         </View>

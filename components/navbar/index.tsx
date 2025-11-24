@@ -18,7 +18,6 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen }: NavbarProps) 
 
   return (
     <View style={[navbarStyles.container, isMobile && { minHeight: 64 }]}>
-      {/* Botón de menú para móvil */}
       {isMobile && (
         <Button 
           variant="solid" 
@@ -34,10 +33,8 @@ export default function Navbar({ onToggleSidebar, isSidebarOpen }: NavbarProps) 
         </Button> 
       )}
 
-      {/* Espacio vacío para desktop */}
       {!isMobile && <View />}
 
-      {/* Iconos de la derecha */}
       <View style={navbarStyles.rightIcons}>
         {isAuthenticated && user?.roles?.[0] && user?.email ? (
           <>

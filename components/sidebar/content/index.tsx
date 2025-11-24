@@ -15,7 +15,6 @@ export const SidebarContent: React.FC<SidebarContentProps> = ({
 }) => {
   return (
   <View style={styles.contentContainer}>
-      {/* Menu Sections */}
       {menuSections.map((section, sectionIndex) => (
         <View 
           key={sectionIndex} 
