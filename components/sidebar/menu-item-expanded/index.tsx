@@ -91,7 +91,6 @@ const SidebarMenuItemExpanded: React.FC<SidebarMenuItemExpandedProps> = ({
         )}
       </Pressable>
 
-      {/* Submenu */}
       {item.hasSubmenu && isExpanded && item.submenu && (
         <View style={sidebarStyles.submenuContainer}>
           {item.submenu.map((subItem, subIndex) => (
