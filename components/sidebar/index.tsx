@@ -44,6 +44,7 @@ export default function Sidebar({
 
   return (
     <>
+      {/* Overlay para móvil */}
       {isMobile && (
         <SidebarOverlay
           isOpen={isOpen}
@@ -53,6 +54,7 @@ export default function Sidebar({
         />
       )}
 
+      {/* Sidebar */}
       <Animated.View
         style={{
           width: sidebarWidth,

@@ -2,7 +2,6 @@ import { Stack } from 'expo-router';
 import { Platform } from 'react-native';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
-import { TouchableOpacity, Image } from 'react-native';
 import Seo from '@/components/helpers/Seo';
 import AuthScreen from '../components/auth/screens/AuthScreen';
 import { useSession } from '@/context/AuthContext';
@@ -54,22 +53,7 @@ export default function SignIn() {
   return (
     <>
       {/* Configura la barra de navegación: oculta header en web, título "Iniciar Sesión" */}
-      <Stack.Screen 
-        options={{ 
-          headerShown: !Web, 
-          title: 'Iniciar Sesión',
-          //Si sí hay historial, headerLeft se establece en undefined para mostrar el botón de retroceso predeterminado.
-          //Si no hay historial, muestra un botón personalizado que navega a /home
-          headerLeft: router.canGoBack() ? undefined : () => (
-            <TouchableOpacity onPress={() => router.push('/home')} className="p-2" activeOpacity={0.7}>
-              <Image 
-                source={require('@/assets/icons/back.png')}
-                style={{ width: 24, height: 24, marginLeft: 11, marginRight: 3 }}
-              />
-            </TouchableOpacity>
-          )
-        }} 
-      />
+      <Stack.Screen options={{ headerShown: !Web, title: 'Iniciar Sesión' }} />
 
       {/* Mejora SEO: título y descripción para buscadores */}
       <Seo title="Iniciar Sesión" description="Inicia sesión en BusTix para gestionar tus viajes." />

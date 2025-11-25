@@ -56,6 +56,7 @@ export const SidebarHeader: React.FC<SidebarHeaderProps> = ({
         )}
       </View>
 
+      {/* Botón toggle - siempre en la esquina derecha */}
       {!isMobile && onToggleCollapse && (
         <View
           style={{
@@ -84,6 +85,7 @@ export const SidebarHeader: React.FC<SidebarHeaderProps> = ({
         </View>
       )}
 
+      {/* Botón móvil en overlay - solo visible en móvil */}
       {isMobile && !isCollapsed && (
         <Button
           variant="solid"

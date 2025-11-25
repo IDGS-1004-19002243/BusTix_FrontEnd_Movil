@@ -52,7 +52,7 @@ export default function LoginForm({ onSwitchToSignUp }: LoginFormProps) {
             </FormControlLabel>
             <Input className={`my-1 ${inputHeightClass}`}>
               <InputField
-                placeholder="Correo electrónico"
+                placeholder="Nombre de usuario"
                 value={login.username}
                 onChangeText={(text) => {
                   login.setUsername(text);
@@ -60,6 +60,7 @@ export default function LoginForm({ onSwitchToSignUp }: LoginFormProps) {
                 }}
               />
             </Input>
+              {/* adjust input height on mobile */}
             <FormControlError>
               <FormControlErrorIcon as={AlertCircleIcon} className="text-red-500" />
               <FormControlErrorText className="text-red-500">

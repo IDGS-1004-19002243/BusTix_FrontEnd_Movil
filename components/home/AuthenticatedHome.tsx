@@ -35,23 +35,6 @@ export default function AuthenticatedHome() {
   else if (hour >= 18) greeting = "Buenas noches,";
   const userName = user?.name || "Usuario,";
 
-  
-        {/* 
-          Contenedor flex que dispone los elementos en fila y permite envolver a la siguiente línea.
-          - flex: Activa el layout Flexbox.
-          - flex-row: Dirección horizontal (elementos uno al lado del otro).
-          - flex-wrap: Permite que los elementos envuelvan a la siguiente línea si no caben.
-        */}
-
-          {/* 
-              Cada ítem ocupa un porcentaje del ancho del contenedor padre, determinando cuántos caben por fila.
-              - w-1/2: 50% del ancho → Caben 2 ítems por fila (2 columnas en móvil).
-              - w-1/3: ~33% del ancho → Caben 3 ítems por fila (3 columnas en desktop).
-              - p-2: Padding de 8px alrededor de cada ítem para separación.
-
-              No configuras "n columnas" directamente; Flexbox pone tantos como quepan, 
-              y los extras bajan a la siguiente fila (por flex-wrap).
-            */}
   return (
     <>
       <Seo title="Inicio" description="Bienvenido de vuelta a BusTix." />
@@ -62,10 +45,24 @@ export default function AuthenticatedHome() {
           {greeting} <Text className="font-bold">{userName}</Text>
         </Text>
 
+        {/* 
+          Contenedor flex que dispone los elementos en fila y permite envolver a la siguiente línea.
+          - flex: Activa el layout Flexbox.
+          - flex-row: Dirección horizontal (elementos uno al lado del otro).
+          - flex-wrap: Permite que los elementos envuelvan a la siguiente línea si no caben.
+        */}
         <View className="flex flex-row flex-wrap">
           {categories.map((item) => {
 
-    
+            {/* 
+              Cada ítem ocupa un porcentaje del ancho del contenedor padre, determinando cuántos caben por fila.
+              - w-1/2: 50% del ancho → Caben 2 ítems por fila (2 columnas en móvil).
+              - w-1/3: ~33% del ancho → Caben 3 ítems por fila (3 columnas en desktop).
+              - p-2: Padding de 8px alrededor de cada ítem para separación.
+
+              No configuras "n columnas" directamente; Flexbox pone tantos como quepan, 
+              y los extras bajan a la siguiente fila (por flex-wrap).
+            */}
             const itemClassName = isMobile ? 'w-1/2 p-2' : 'w-1/3 p-2';
             return (
               <View key={item} className={itemClassName}>

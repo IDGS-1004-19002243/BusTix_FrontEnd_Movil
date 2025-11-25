@@ -51,7 +51,9 @@ export const SuccessToast: React.FC<SuccessToastProps> = ({
               </ToastDescription>
             )}
           </VStack>
-            {closable && (
+        </HStack>
+        <HStack className="min-[450px]:gap-3 gap-1 items-center">
+          {closable && (
             <Pressable onPress={() => toast.close(String(id))} className="justify-center items-center">
               <Icon as={CloseIcon} className="stroke-white" />
             </Pressable>

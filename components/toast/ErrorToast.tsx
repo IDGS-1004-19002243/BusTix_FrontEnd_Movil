@@ -55,11 +55,15 @@ export const ErrorToast: React.FC<ErrorToastProps> = ({
               </ToastDescription>
             )}
           </VStack>
-          {closable && (
+        </HStack>
+        <HStack className="min-[450px]:gap-3 gap-1 items-center">
+          <HStack>
+            {closable && (
               <Pressable onPress={() => toast.close(String(id))} className="justify-center items-center">
                 <Icon as={CloseIcon} className="stroke-white" />
               </Pressable>
             )}
+          </HStack>
         </HStack>
       </HStack>
     </Toast>
