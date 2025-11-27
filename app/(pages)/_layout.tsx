@@ -96,7 +96,7 @@ export default function PagesLayout() {
 
   /* <Slot /> es un componente de Expo Router que actúa como un marcador de posición (placeholder) 
      para renderizar el contenido de las rutas hijas. Su traducción sencilla es "espacio reservado" o "ranura". 
-     Este <Slot /> renderiza la página específica dentro del grupo (pages), como home o settings, completando la cadena de layouts. */
+     Este <Slot /> renderiza la página específica dentro del grupo (pages), como home o eventos, completando la cadena de layouts. */
 
   return (
     <>

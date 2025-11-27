@@ -3,6 +3,7 @@ import {
   User,
   Settings,
   Calendar,
+  Ticket,
 } from 'lucide-react-native';
 import { MenuSection } from '@/types/sidebar.types';
 
@@ -26,13 +27,13 @@ export const menuSections: MenuSection[] = [
         bgColor: '#FEF3C7',
         route: '/(pages)/eventos'
       },
-      {
-        icon: Settings,
-        label: 'Configuración',
-        active: false,
-        color: '#6B7280',
-        bgColor: '#E5E7EB',
-        route: '/(pages)/settings'
+      { 
+        icon: Ticket, 
+        label: 'Mis Boletos', 
+        active: false, 
+        color: '#3B82F6', 
+        bgColor: '#DBEAFE',
+        route: '/(pages)/mis-boletos'
       },
     ]
   },

@@ -27,15 +27,19 @@ export default function CompraScreen() {
   const { slug, token } = useLocalSearchParams<{ slug: string; token: string }>();
   
   const { isAuthenticated } = useSession(); // Contexto de autenticación
-  const { purchaseData, validatePurchaseData, clearPurchaseData } = usePurchase(); // Contexto de compra
+  const { purchaseData, validatePurchaseData, clearPurchaseData, setPurchaseData } = usePurchase(); // Contexto de compra
   
   // ===== ESTADO =====
   // Estado para mostrar loading mientras se validan los datos
   const [loading, setLoading] = useState(true);
   
+  // Estado para precio calculado
+  // const [calculatedPrice, setCalculatedPrice] = useState(purchaseData?.pricePerTicket || 0);
+  
   // Estados para información de pago
   const [cardNumber, setCardNumber] = useState('');
-  const [expiry, setExpiry] = useState('');
+  const [expiryMonth, setExpiryMonth] = useState('');
+  const [expiryYear, setExpiryYear] = useState('');
   const [cvv, setCvv] = useState('');
   const [name, setName] = useState('');
   
@@ -54,8 +58,6 @@ export default function CompraScreen() {
   const validarAccesoCompra = () => {
     // PASO 1: Verificar si el usuario está logueado
     if (!isAuthenticated) {
-            setLoading(false);
-
       return <AuthRequiredScreen />;
     }
 
@@ -64,8 +66,8 @@ export default function CompraScreen() {
       return <ExpiredSessionScreen />;
     }
 
-    // PASO 3: Verificar si los datos son válidos (no expirados)
-    if (!validatePurchaseData()) {
+    // PASO 3: Verificar si la sesión ha expirado
+    if (sessionExpired) {
       return <ExpiredSessionScreen />;
     }
 
@@ -116,6 +118,13 @@ export default function CompraScreen() {
   }, [purchaseData]); // se pone como dependencia para que cuando cambien los datos se vuelva a evaluar
                       // y pueda quitar el loading en el momento correcto
 
+  // Verificar si la sesión ya expiró despues de montar el componente
+  useEffect(() => {
+    if (purchaseData && !validatePurchaseData()) {
+      setSessionExpired(true);
+    }
+  }, []); // Solo al montar
+
   // Inicializar array de pasajeros cuando cambie la cantidad
   useEffect(() => {
     if (purchaseData?.quantity) {
@@ -141,14 +150,15 @@ export default function CompraScreen() {
 
       return () => clearInterval(interval); // Limpiar el intervalo al desmontar o si cambian las dependencias
     }
-  }, [sessionExpired]); // Remover purchaseData para evitar bucle
+  }, [sessionExpired]); // Se ejecuta cada vez que cambie sessionExpired
 
   // Limpiar datos cuando la sesión expire
   useEffect(() => {
     if (sessionExpired) {
       clearPurchaseData();
     }
-  }, [sessionExpired]);
+  }, [sessionExpired]); // Se ejecuta cada vez que cambie sessionExpired
+
 
   // Manejar botón de atrás físico
   useEffect(() => {
@@ -183,7 +193,7 @@ export default function CompraScreen() {
   }
 
   // SI TODAS LAS VALIDACIONES PASAN, mostrar el flujo de compra
-  const { quantity, pricePerTicket, eventName, eventImage } = purchaseData!;
+  const { quantity, pricePerTicket, eventName, eventImage, viajeId, paradaAbordajeId } = purchaseData!;
   const total = quantity * pricePerTicket;
 
   return (
@@ -209,12 +219,16 @@ export default function CompraScreen() {
         quantity={quantity}
         pricePerTicket={pricePerTicket}
         total={total}
+        viajeId={viajeId}
+        paradaAbordajeId={paradaAbordajeId}
         cardNumber={cardNumber}
-        expiry={expiry}
+        expiryMonth={expiryMonth}
+        expiryYear={expiryYear}
         cvv={cvv}
         name={name}
         onCardNumberChange={setCardNumber}
-        onExpiryChange={setExpiry}
+        onExpiryMonthChange={setExpiryMonth}
+        onExpiryYearChange={setExpiryYear}
         onCvvChange={setCvv}
         onNameChange={setName}
         pasajeros={pasajeros}

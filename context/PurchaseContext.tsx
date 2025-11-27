@@ -10,6 +10,26 @@ export function generateSessionToken(): string {
 }
 
 /**
+ * PasajeroData - Define la estructura de datos de un pasajero
+ */
+export interface PasajeroData {
+  nombre: string;
+  email: string;
+  telefono: string;
+}
+
+/**
+ * PaymentData - Define la estructura de datos de pago
+ */
+export interface PaymentData {
+  cardNumber: string;
+  expiryMonth: string;
+  expiryYear: string;
+  cvv: string;
+  name: string;
+}
+
+/**
  * PurchaseData - Define la estructura de los datos de compra
  */
 interface PurchaseData {
@@ -19,6 +39,11 @@ interface PurchaseData {
   eventImage: string;     // URL de la imagen del evento
   quantity: number;       // Número de boletos a comprar
   pricePerTicket: number; // Precio individual de cada boleto
+  viajeId: number;        // ID del viaje seleccionado
+  paradaAbordajeId: number; // ID de la parada de abordaje seleccionada
+  ciudadAbordaje?: string; // Ciudad del punto de abordaje seleccionado
+  pasajeros?: PasajeroData[]; // Datos de los pasajeros
+  paymentData?: PaymentData; // Datos de pago
   sessionToken: string;   // Token único para validar sesión de compra
   timestamp: number;      // Hora de creación (para validar expiración)
 }
@@ -29,14 +54,18 @@ interface PurchaseData {
 interface PurchaseContextType {
   purchaseData: PurchaseData | null;
   setPurchaseData: (data: PurchaseData) => void;
+  updatePurchaseData: (updates: Partial<PurchaseData>) => void;
   clearPurchaseData: () => void;
   validatePurchaseData: () => boolean;
+  isTransactionOverlayVisible: boolean;
+  setTransactionOverlayVisible: (visible: boolean) => void;
 }
 
 const PurchaseContext = createContext<PurchaseContextType | undefined>(undefined);
 
 export function PurchaseProvider({ children }: { children: React.ReactNode }) {
   const [purchaseData, setPurchaseDataState] = useState<PurchaseData | null>(null);
+  const [isTransactionOverlayVisible, setIsTransactionOverlayVisible] = useState(false);
 
   const setPurchaseData = (data: PurchaseData) => {
     const sessionToken = data.sessionToken || generateSessionToken();
@@ -46,6 +75,16 @@ export function PurchaseProvider({ children }: { children: React.ReactNode }) {
       sessionToken,
       timestamp: Date.now(),
     });
+  };
+
+  const updatePurchaseData = (updates: Partial<PurchaseData>) => {
+    if (purchaseData) {
+      setPurchaseDataState({
+        ...purchaseData,
+        ...updates,
+        timestamp: Date.now(),
+      });
+    }
   };
 
   const clearPurchaseData = () => {
@@ -67,13 +106,20 @@ export function PurchaseProvider({ children }: { children: React.ReactNode }) {
     return isValid;
   };
 
+  const setTransactionOverlayVisible = (visible: boolean) => {
+    setIsTransactionOverlayVisible(visible);
+  };
+
   return (
     <PurchaseContext.Provider
       value={{
         purchaseData,
         setPurchaseData,
+        updatePurchaseData,
         clearPurchaseData,
         validatePurchaseData,
+        isTransactionOverlayVisible,
+        setTransactionOverlayVisible,
       }}
     >
       {children}

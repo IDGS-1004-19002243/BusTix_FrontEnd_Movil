@@ -8,6 +8,15 @@ import DetalleEvento from '@/components/compra/DetalleEvento';
 import PasajerosForm, { PasajeroData } from '@/components/compra/PasajerosForm';
 import PagoForm from '@/components/compra/PagoForm';
 import ConfirmacionCompra from '@/components/compra/ConfirmacionCompra';
+import SuccessCompra from '@/components/compra/SuccessCompra';
+
+// Servicios
+import { IniciarCompraDto } from '@/services/boletos/boletos.service';
+
+// Hooks
+import { usePurchaseProcess } from './hooks/usePurchaseProcess';
+import { usePurchase } from '@/context/PurchaseContext';
+
 
 interface StepperProps {
   eventName: string;
@@ -15,12 +24,16 @@ interface StepperProps {
   quantity: number;
   pricePerTicket: number;
   total: number;
+  viajeId: number;
+  paradaAbordajeId: number;
   cardNumber: string;
-  expiry: string;
+  expiryMonth: string;
+  expiryYear: string;
   cvv: string;
   name: string;
   onCardNumberChange: (value: string) => void;
-  onExpiryChange: (value: string) => void;
+  onExpiryMonthChange: (value: string) => void;
+  onExpiryYearChange: (value: string) => void;
   onCvvChange: (value: string) => void;
   onNameChange: (value: string) => void;
   pasajeros: PasajeroData[];
@@ -35,12 +48,16 @@ export default function Stepper({
   quantity,
   pricePerTicket,
   total,
+  viajeId,
+  paradaAbordajeId,
   cardNumber,
-  expiry,
+  expiryMonth,
+  expiryYear,
   cvv,
   name,
   onCardNumberChange,
-  onExpiryChange,
+  onExpiryMonthChange,
+  onExpiryYearChange,
   onCvvChange,
   onNameChange,
   pasajeros,
@@ -49,14 +66,64 @@ export default function Stepper({
   bottomInset,
 }: StepperProps) {
   const [isPasajerosValid, setIsPasajerosValid] = useState(false);
+  const [isPagoValid, setIsPagoValid] = useState(false);
   const { showToast } = useToastManager();
   const [showPasajerosErrors, setShowPasajerosErrors] = useState(false);
+  const [showPagoErrors, setShowPagoErrors] = useState(false);
+  const { isConfirming, alertType, alertMessage, successData, handleConfirmPurchase, clearAlert } = usePurchaseProcess(onFinish);
+  const { updatePurchaseData } = usePurchase();
+
+  const handleSubmitPurchase = () => {
+    const dto: IniciarCompraDto = {
+      ViajeID: viajeId,
+      Pasajeros: pasajeros.map(pasajero => ({
+        NombrePasajero: pasajero.nombre,
+        EmailPasajero: pasajero.email,
+        TelefonoPasajero: pasajero.telefono,
+      })),
+      ParadaAbordajeID: paradaAbordajeId,
+    };
+    handleConfirmPurchase(dto);
+  };
 
   useEffect(() => {
     if (isPasajerosValid) {
       setShowPasajerosErrors(false);
     }
   }, [isPasajerosValid]);
+
+  useEffect(() => {
+    if (isPagoValid) {
+      setShowPagoErrors(false);
+    }
+  }, [isPagoValid]);
+
+  // Guardar datos de pasajeros en el contexto cuando cambien
+  useEffect(() => {
+    if (pasajeros.length > 0) {
+      updatePurchaseData({ pasajeros });
+    }
+  }, [pasajeros]);
+
+  // Guardar datos de pago en el contexto cuando cambien
+  useEffect(() => {
+    if (cardNumber || name) {
+      updatePurchaseData({
+        paymentData: {
+          cardNumber,
+          expiryMonth,
+          expiryYear,
+          cvv,
+          name,
+        },
+      });
+    }
+  }, [cardNumber, expiryMonth, expiryYear, cvv, name]);
+
+  // Si hay datos de éxito, mostrar pantalla de éxito en lugar del stepper
+  if (successData) {
+    return <SuccessCompra data={successData} />;
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: 'white', paddingBottom: bottomInset }}>
@@ -85,8 +152,8 @@ export default function Stepper({
             eventName={eventName}
             eventImage={eventImage}
             quantity={quantity}
-            pricePerTicket={pricePerTicket}
-            total={total}
+            viajeId={viajeId}
+            paradaAbordajeId={paradaAbordajeId}
           />
         </ProgressStep>
 
@@ -95,7 +162,7 @@ export default function Stepper({
           buttonNextText="Siguiente"
           buttonPreviousText="Anterior"
           buttonFillColor="#FFFFFF"
-          buttonBorderColor="#2D2D2D"
+          buttonBorderColor="transparent"
           buttonNextTextColor="#2D2D2D"
           buttonPreviousTextColor="#2D2D2D"
           errors={!isPasajerosValid}
@@ -124,39 +191,51 @@ export default function Stepper({
           buttonNextText="Siguiente"
           buttonPreviousText="Anterior"
           buttonFillColor="#FFFFFF"
-          buttonBorderColor="#2D2D2D"
+          buttonBorderColor="transparent"
           buttonNextTextColor="#2D2D2D"
           buttonPreviousTextColor="#2D2D2D"
+          errors={!isPagoValid}
+          onNext={() => {
+            if (!isPagoValid) {
+              setShowPagoErrors(true);
+              showToast({
+                type: 'error',
+                title: 'Información de pago incompleta',
+                description: 'Por favor, completa toda la información de pago antes de continuar'
+              });
+            }
+          }}
         >
           <PagoForm
             cardNumber={cardNumber}
-            expiry={expiry}
+            expiryMonth={expiryMonth}
+            expiryYear={expiryYear}
             cvv={cvv}
             name={name}
             onCardNumberChange={onCardNumberChange}
-            onExpiryChange={onExpiryChange}
+            onExpiryMonthChange={onExpiryMonthChange}
+            onExpiryYearChange={onExpiryYearChange}
             onCvvChange={onCvvChange}
             onNameChange={onNameChange}
+            onValidationChange={setIsPagoValid}
+            forceShowErrors={showPagoErrors}
           />
         </ProgressStep>
 
         <ProgressStep
           label="Confirmar"
-          buttonFinishText="Confirmar"
-          onSubmit={onFinish}
+          buttonFinishText={isConfirming ? "Procesando..." : "Confirmar"}
+          onSubmit={handleSubmitPurchase}
           buttonPreviousText="Anterior"
           buttonFillColor="#FFFFFF"
-          buttonBorderColor="#2D2D2D"
+          buttonBorderColor="transparent"
           buttonFinishTextColor="#2D2D2D"
           buttonPreviousTextColor="#2D2D2D"
         >
           <ConfirmacionCompra
-            eventName={eventName}
-            quantity={quantity}
-            total={total}
-            cardNumber={cardNumber}
-            name={name}
-            pasajeros={pasajeros}
+            alertType={alertType}
+            alertMessage={alertMessage}
+            clearAlert={clearAlert}
           />
         </ProgressStep>
       </ProgressSteps>

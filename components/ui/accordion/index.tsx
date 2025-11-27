@@ -16,11 +16,11 @@ const SCOPE = 'ACCORDION';
 /** Styles */
 
 const accordionStyle = tva({
-  base: 'w-full',
+  base: 'w-full border border-gray-200 rounded-lg overflow-hidden',
   variants: {
     variant: {
       filled: 'bg-white shadow-hard-2',
-      unfilled: '',
+      unfilled: 'bg-white',
     },
     size: {
       sm: '',
@@ -31,7 +31,7 @@ const accordionStyle = tva({
 });
 
 const accordionItemStyle = tva({
-  base: '',
+  base: 'border-b border-gray-200 last:border-b-0',
   parentVariants: {
     variant: {
       filled: 'bg-background-0',

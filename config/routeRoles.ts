@@ -1,5 +1,5 @@
 export const routeRoles: Record<string, string[]> = {
   '/home': [],
   '/eventos': [],
-  '/settings': ['Admin'],
+  '/mis-boletos': ['User'],
 };

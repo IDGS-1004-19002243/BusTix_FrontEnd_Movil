@@ -36,12 +36,15 @@ export const usePasajerosValidation = (pasajeros: PasajeroData[]): PasajerosVali
         allValid = false;
       }
 
-      // Validar teléfono: numérico y no vacío
+      // Validar teléfono: numérico, 10 dígitos y no vacío
       if (!pasajero.telefono || pasajero.telefono.trim() === '') {
         fieldErrors.telefono = 'El teléfono es obligatorio';
         allValid = false;
       } else if (!/^\d+$/.test(pasajero.telefono)) {
         fieldErrors.telefono = 'El teléfono debe contener solo números';
+        allValid = false;
+      } else if (pasajero.telefono.length !== 10) {
+        fieldErrors.telefono = 'El teléfono debe tener exactamente 10 dígitos';
         allValid = false;
       }
 

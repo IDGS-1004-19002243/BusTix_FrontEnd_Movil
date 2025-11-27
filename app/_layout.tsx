@@ -15,7 +15,9 @@ import { PurchaseProvider } from "@/context/PurchaseContext";
 import { SplashScreenController } from "@/components/auth/screens/splash";
 import '@/services/auth/interceptors'; // Importar para configurar axios interceptores
 import LoadingTransition from "@/components/transition/LoadingTransition";
+import TransactionOverlay from "@/components/transition/TransactionOverlay";
 import { useSession } from "@/context/AuthContext";
+import { usePurchase } from "@/context/PurchaseContext";
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -51,6 +53,7 @@ function RootLayoutNav() {
 
 function AppContent({ colorMode }: { colorMode: "light" | "dark" }) {
   const { isTransitioning, setTransition } = useSession();
+  const { isTransactionOverlayVisible, setTransactionOverlayVisible } = usePurchase();
 
   return (
     <>
@@ -65,6 +68,18 @@ function AppContent({ colorMode }: { colorMode: "light" | "dark" }) {
           zIndex: 999 
         }}>
           <LoadingTransition duration={2000} onComplete={() => setTransition(false)} />
+        </View>
+      )}
+      {isTransactionOverlayVisible && (
+        <View style={{
+          position: 'absolute', 
+          top: 0,
+          left: 0, 
+          right: 0, 
+          bottom: 0, 
+          zIndex: 999 
+        }}>
+          <TransactionOverlay />
         </View>
       )}
       <SafeAreaProvider>

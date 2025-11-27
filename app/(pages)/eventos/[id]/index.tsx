@@ -18,7 +18,10 @@ import {
   FavouriteIcon,
 } from "@/components/ui/icon";
 import { apiGetEventoById } from "@/services/eventos";
+import { apiGetViajes, apiGetViajeDetalleCliente, apiCalcularPrecio } from "@/services/viajes/viajes.service";
 import { Event } from "@/services/eventos/eventos.types";
+import { ViajeDetalleCliente } from "@/services/viajes/viajes.types";
+import { apiReverseGeocode } from "@/services/geoapify";
 import Seo from "@/components/helpers/Seo";
 import EventDetailCard from "@/components/eventos/EventDetailCard";
 import ReserveModal from "@/components/eventos/ReserveModal";
@@ -35,6 +38,9 @@ export default function EventDetailPage() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [event, setEvent] = useState<Event | null>(null);
+  const [viajeDetalle, setViajeDetalle] = useState<ViajeDetalleCliente | null>(null);
+  const [paradasWithCities, setParadasWithCities] = useState<any[]>([]);
+  const [price, setPrice] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -54,11 +60,72 @@ export default function EventDetailPage() {
         setError(null);
         const eventData = await apiGetEventoById(id);
         setEvent(eventData);
+
+        // Intentar obtener los viajes asociados al evento
+        // Esto es opcional, si falla, el evento se muestra sin precio
+        try {
+          // Llamar a la API para obtener la lista de viajes del evento
+          const viajesData = await apiGetViajes(id);
+
+          // Si hay al menos un viaje disponible
+          if (viajesData.length > 0) {
+            // Obtener el detalle completo del primer viaje (usando su ID)
+            // Esto incluye precios, asientos disponibles, y lista de paradas
+            const detalle = await apiGetViajeDetalleCliente(viajesData[0].viajeID);
+
+            // Guardar el detalle del viaje en el estado para usarlo en la UI
+            setViajeDetalle(detalle);
+
+            // Si las ventas están abiertas y hay un precio base, guardarlo
+            if (detalle.ventasAbiertas && detalle.precioDesde > 0) {
+              setPrice(detalle.precioDesde);
+            }
+
+            // Si el viaje tiene por lo menos una parada definida
+            if (detalle.paradas.length > 0) {
+              // detalle.paradas es un array (lista) de objetos Parada.
+              // .map() recorre cada parada y ejecuta una función async para cada una.
+              // async significa que la función puede hacer tareas que toman tiempo (como llamadas a internet).
+              // Para cada parada, se crea una "promesa" (Promise), que es como una tarea pendiente.
+              // La promesa se crea automáticamente cuando se ejecuta la función async en .map().
+              // Representa la tarea de obtener la ciudad, y se resuelve cuando la API responde.
+              // Las peticiones HTTP a Geoapify se inician en este momento, cuando se llama a apiReverseGeocode dentro del .map().
+              // Se hacen en paralelo: si hay 10 paradas, se lanzan 10 peticiones simultáneas al mismo tiempo.
+              // Cada petición se resuelve en su propio tiempo (algunas rápidas, otras lentas), pero no bloquean a las demás.
+              // El useEffect entero espera a que todas las operaciones async terminen (incluyendo estas peticiones),
+              // durante ese tiempo, loading=true y se muestra el spinner de carga en la UI.
+              const paradasPromises = detalle.paradas.map(async (parada) => {
+                // Dentro de la función, se llama a apiReverseGeocode con latitud y longitud de la parada.
+                // apiReverseGeocode hace una petición HTTP a Geoapify y devuelve el nombre de la ciudad.
+                // await pausa la ejecución hasta que la petición termine y se obtenga la respuesta.
+                const city = await apiReverseGeocode(parada.latitud, parada.longitud);
+
+                // Luego, se usa el spread operator (...parada) para copiar todas las propiedades de la parada original
+                // y se agrega la nueva propiedad 'city' con el valor obtenido.
+                // El return devuelve el objeto parada enriquecido con la ciudad.
+                return { ...parada, city };
+              });
+
+              // El resultado de .map() es un array de promesas (paradasPromises), no los resultados aún.
+              // Promise.all() espera a que TODAS las promesas se resuelvan (es decir, todas las peticiones terminen).
+              // Las peticiones se hacen en paralelo, no una por una, para ser más rápido.
+              // await aquí pausa hasta que todas las respuestas lleguen, sin importar si algunas terminaron antes que otras.
+              // Por ejemplo, si la petición 10 termina primero, Promise.all() aún espera a las demás (ej. petición 1 si es más lenta).
+              // paradasWithCitiesData será un array con las paradas ya con 'city' agregado.
+              const paradasWithCitiesData = await Promise.all(paradasPromises);
+
+              // Finalmente, se guarda en el estado con setParadasWithCities.
+              setParadasWithCities(paradasWithCitiesData);
+            }
+          }
+        } catch (viajesError) {
+          // Si algo falla en la obtención de viajes o detalles, ignorarlo
+          // El evento se mostrará sin información de precio o paradas
+        }
       } catch (err: any) {
-        console.error("Error fetching event:", err);
         setError(err.message || "Error al cargar el evento");
       } finally {
-        setLoading(false);
+        setLoading(false); // Seaa éxito o error, dejar de cargar
       }
     };
 
@@ -73,8 +140,8 @@ export default function EventDetailPage() {
     }
   };
 
-  const handleConfirm = () => {
-    if (!event) return; // Asegurar que event no sea null
+  const handleConfirm = async (selectedParada: any) => {
+    if (!event || !viajeDetalle || !selectedParada) return; // Asegurar que event no sea null
 
     // PASO 1: Validar que se haya seleccionado al menos 1 boleto
     if (quantity < 1) {
@@ -108,7 +175,10 @@ export default function EventDetailPage() {
       eventName: event.nombre,             // Nombre del evento
       eventImage: event.urlImagen || '',   // URL de la imagen del evento
       quantity: quantity,                  // Cantidad de boletos seleccionados
-      pricePerTicket: 680,                 // Precio por boleto (hardcoded por ahora)
+      pricePerTicket: 0,                   // Se calculará en el stepper
+      viajeId: viajeDetalle.viajeID,       // ID del viaje
+      paradaAbordajeId: selectedParada.paradaViajeID, // ID de la parada
+      ciudadAbordaje: selectedParada.city, // Ciudad del punto de abordaje
       sessionToken: sessionToken,          // Token único para validar en URL
       timestamp: Date.now(),               // Timestamp se añade automáticamente en setPurchaseData
     });
@@ -188,7 +258,7 @@ export default function EventDetailPage() {
           </Alert>
         )}
 
-        <EventDetailCard event={event} />
+        <EventDetailCard event={event} viajeDetalle={viajeDetalle} paradasWithCities={paradasWithCities} />
       </ScrollView>
 
       <View className="bg-white p-4 rounded-lg">
@@ -211,18 +281,45 @@ export default function EventDetailPage() {
               <ButtonIcon as={FavouriteIcon} />
             </Button>
           </HStack>
-          <View className="flex flex-row items-center gap-3">
-            <Text className="text-lg">
-              <Text className="font-bold">Desde:</Text> $ 680
-            </Text>
-            <Button
-              size="lg"
-              onPress={handleReserve}
-              disabled={event.estatus !== 1}
-            >
-              <ButtonText>Reservar</ButtonText>
-            </Button>
-          </View>
+          {event.totalViajes === 0 ? (
+            <View className="flex flex-row items-center gap-3">
+              <Text className="text-lg text-gray-500">Sin Viajes</Text>
+              <Button size="md" variant="solid" onPress={() => {}}>
+                <ButtonText>Notificarme</ButtonText>
+              </Button>
+            </View>
+          ) : viajeDetalle && !viajeDetalle.ventasAbiertas ? (
+            <View className="flex flex-row items-center gap-3">
+              <Text className="text-lg text-gray-500">Próximamente</Text>
+              <Button size="md" variant="solid" onPress={() => {}}>
+                <ButtonText>Notificarme</ButtonText>
+              </Button>
+            </View>
+          ) : price > 0 ? (
+            viajeDetalle && viajeDetalle.asientosDisponibles > 0 ? (
+              <View className="flex flex-row items-center gap-3">
+                <Text className="text-lg">
+                  <Text className="font-bold">Desde:</Text> $ {price}
+                </Text>
+                <Button
+                  size="lg"
+                  onPress={handleReserve}
+                  disabled={event.estatus !== 1}
+                >
+                  <ButtonText>Reservar</ButtonText>
+                </Button>
+              </View>
+            ) : (
+              <Text className="text-lg font-bold text-red-500">Agotado</Text>
+            )
+          ) : (
+            <View className="flex flex-row items-center gap-3">
+              <Text className="text-lg text-gray-500">No disponible</Text>
+              <Button size="md" variant="solid" onPress={() => {}}>
+                <ButtonText>Notificarme</ButtonText>
+              </Button>
+            </View>
+          )}
         </HStack>
       </View>
 
@@ -233,6 +330,7 @@ export default function EventDetailPage() {
         quantity={quantity}
         onQuantityChange={setQuantity}
         onConfirm={handleConfirm}
+        paradasWithCities={paradasWithCities}
       />
 
       <AuthModal
