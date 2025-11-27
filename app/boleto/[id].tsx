@@ -1,209 +1,333 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, useWindowDimensions } from 'react-native';
+import { ScrollView, TouchableOpacity, Platform, View } from 'react-native';
 import { VStack } from '@/components/ui/vstack';
-import { HStack } from '@/components/ui/hstack';
+import { Button, ButtonText } from '@/components/ui/button';
 import { Heading } from '@/components/ui/heading';
 import { Text } from '@/components/ui/text';
-import { Card } from '@/components/ui/card';
-import { Button, ButtonText, ButtonIcon } from '@/components/ui/button';
+import { HStack } from '@/components/ui/hstack';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
-import { ArrowLeftIcon } from '@/components/ui/icon';
 import { apiGetUserBoletos, EventoUsuario, Transaccion, BoletoUsuario } from '@/services/boletos/boletos.service';
 import LoadingScreen from '@/components/compra/LoadingScreen';
-import Seo from '@/components/helpers/Seo';
 import QRCode from 'react-native-qrcode-svg';
-import { formatDate } from '@/components/eventos/hooks/useEventos';
+import { Image } from 'expo-image';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { apiGetExactAddress } from '@/services/geoapify';
+import { MaterialIcons } from '@expo/vector-icons';
 
-export const options = {
-  title: 'Detalle del Boleto',
-  headerShown: true,
-};
-
-export default function BoletoDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+export default function BoletoQRDetailScreen() {
+  const { id: eventoId, transaccion, boleto } = useLocalSearchParams<{ id: string; transaccion: string; boleto: string }>();
   const router = useRouter();
-  const { width } = useWindowDimensions();
-  const [boleto, setBoleto] = useState<BoletoUsuario | null>(null);
-  const [evento, setEvento] = useState<EventoUsuario | null>(null);
+  const insets = useSafeAreaInsets();
+  const [boletoData, setBoletoData] = useState<BoletoUsuario | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [eventName, setEventName] = useState<string>('');
+  const [addressData, setAddressData] = useState<{ address: string; state: string } | null>(null);
+  const [addressLoading, setAddressLoading] = useState(false);
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-MX', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
+  };
+
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('es-MX', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
+  const fetchBoletoDetail = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await apiGetUserBoletos();
+      if (response.success) {
+        // Filtrar por eventoId
+        const eventoEncontrado = response.data.find((e: EventoUsuario) => e.eventoID.toString() === eventoId);
+        if (!eventoEncontrado) {
+          setError('Evento no encontrado');
+          return;
+        }
+        setEventName(eventoEncontrado.nombreEvento);
+
+        // Filtrar por transaccionId
+        const transaccionEncontrada = eventoEncontrado.transacciones.find((t: Transaccion) => t.transaccionID?.toString() === transaccion);
+        if (!transaccionEncontrada) {
+          setError('Transacción no encontrada');
+          return;
+        }
+
+        // Filtrar por boletoId
+        const boletoEncontrado = transaccionEncontrada.boletos.find((b: BoletoUsuario) => b.boletoID.toString() === boleto);
+        if (!boletoEncontrado) {
+          setError('Boleto no encontrado');
+          return;
+        }
+
+        setBoletoData(boletoEncontrado);
+      } else {
+        setError('Error al obtener los boletos');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Error al cargar el boleto');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchBoletoDetail = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const response = await apiGetUserBoletos();
-        if (response.success) {
-          // Buscar el boleto en todos los eventos y transacciones
-          let boletoEncontrado: BoletoUsuario | null = null;
-          let eventoEncontrado: EventoUsuario | null = null;
-
-          for (const eventoActual of response.data) {
-            for (const transaccion of eventoActual.transacciones) {
-              const boletoInTransaccion = transaccion.boletos.find((b: BoletoUsuario) => b.boletoID.toString() === id);
-              if (boletoInTransaccion) {
-                boletoEncontrado = boletoInTransaccion;
-                eventoEncontrado = eventoActual;
-                break;
-              }
-            }
-            if (boletoEncontrado) break;
-          }
-
-          if (boletoEncontrado && eventoEncontrado) {
-            setBoleto(boletoEncontrado);
-            setEvento(eventoEncontrado);
-          } else {
-            setError('Boleto no encontrado');
-          }
-        } else {
-          setError('Error al obtener los boletos');
-        }
-      } catch (err: any) {
-        setError(err.message || 'Error al cargar el boleto');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (id) {
+    if (eventoId && transaccion && boleto) {
       fetchBoletoDetail();
     }
-  }, [id]);
+  }, [eventoId, transaccion, boleto]);
 
-  if (loading) {
-    return <LoadingScreen message="Cargando detalle del boleto..." />;
-  }
-
-  if (error || !boleto || !evento) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
-        <Heading size="md" className="text-center mb-4">
-          {error || 'Boleto no encontrado'}
-        </Heading>
-        <Button onPress={() => router.back()}>
-          <ButtonText>Volver</ButtonText>
-        </Button>
-      </View>
-    );
-  }
+  useEffect(() => {
+    if (boletoData && boletoData.paradaAbordajeLatitud && boletoData.paradaAbordajeLongitud) {
+      setAddressLoading(true);
+      apiGetExactAddress(boletoData.paradaAbordajeLatitud, boletoData.paradaAbordajeLongitud)
+        .then((result) => {
+          setAddressData(result);
+          setAddressLoading(false);
+        })
+        .catch(() => {
+          setAddressData({ address: 'Dirección no disponible', state: 'Estado desconocido' });
+          setAddressLoading(false);
+        });
+    }
+  }, [boletoData]);
 
   return (
     <>
-      <Stack.Screen options={options} />
-      <ScrollView style={{ flex: 1, backgroundColor: 'white' }}>
-        <Seo title={`Boleto ${boleto!.codigoBoleto}`} description={`Detalle del boleto ${boleto!.codigoBoleto} para ${evento!.nombreEvento}.`} />
-
-        {/* Header */}
-        <VStack space="md" className="p-4">
-          <Heading size="xl" className="text-center">
-            🎫 Detalle del Boleto
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          title: 'Pase de Abordaje',
+          headerLeft: () => (
+            <TouchableOpacity onPress={() => {
+              if (router.canGoBack()) {
+                router.back();
+              } else {
+                router.push('/mis-boletos');
+              }
+            }} className="p-2" activeOpacity={0.7}>
+              <Image
+                source={require('@/assets/icons/back.png')}
+                style={{ width: 24, height: 24, marginLeft: 5, marginRight: Platform.OS === 'web' ? 3 : 11 }}
+              />
+            </TouchableOpacity>
+          )
+        }}
+      />
+      {loading || addressLoading ? (
+        <LoadingScreen message="Cargando pase de abordaje..." />
+      ) : error || boletoData === null ? (
+        <VStack space="lg" className="items-center p-6">
+          <Heading size="xl" className="text-center text-red-600 mx-8">
+            Error
           </Heading>
-
-          <VStack space="xs" className="items-center">
-            <Text className="text-gray-600 text-center">
-              Evento: {evento!.nombreEvento}
-            </Text>
-            <Text className="text-gray-600 text-center">
-              📅 {formatDate(evento!.fechaEvento)}
-            </Text>
-          </VStack>
+          <Text className="text-center text-gray-600">{error || 'Boleto no encontrado'}</Text>
+          <Button onPress={fetchBoletoDetail} size="md" action="positive">
+            <ButtonText>Reintentar</ButtonText>
+          </Button>
         </VStack>
-
-        {/* Detalle del Boleto */}
-        <VStack space="lg" className="p-4">
-          <Card className="p-6 bg-white border border-gray-200 shadow-lg rounded-lg">
-            <VStack space="md">
-              <Heading size="lg" className="text-blue-600 text-center border-b border-gray-200 pb-3">
-                {boleto.codigoBoleto}
-              </Heading>
-
-              {/* Información Principal */}
-              <Card className="p-4 bg-gray-50 border border-gray-300 rounded-lg">
-                <Heading size="md" className="text-gray-700 mb-4">📋 Información del Boleto</Heading>
-                <View className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <VStack space="sm">
-                    <Text className="text-sm text-gray-600">
-                      🪑 <Text className="font-semibold">Asiento:</Text> {boleto.numeroAsiento}
-                    </Text>
-                    <Text className="text-sm text-gray-600">
-                      👤 <Text className="font-semibold">Pasajero:</Text> {boleto.nombrePasajero}
-                    </Text>
-                    <Text className="text-sm text-gray-600">
-                      💵 <Text className="font-semibold">Precio:</Text> ${boleto.precioTotal.toFixed(2)}
-                    </Text>
-                  </VStack>
-                  <VStack space="sm">
-                    <Text className={`text-sm font-semibold ${boleto.estatus === 10 ? 'text-green-600' : 'text-orange-600'}`}>
-                      📋 <Text className="font-semibold">Estatus:</Text> {boleto.estatusNombre}
-                    </Text>
-                    <Text className="text-sm text-gray-600">
-                      📍 <Text className="font-semibold">Parada de Abordaje:</Text> {boleto.paradaAbordaje}
-                    </Text>
-                    <Text className="text-sm text-gray-600">
-                      📍 <Text className="font-semibold">Coordenadas:</Text> {boleto.paradaAbordajeLatitud.toFixed(6)}, {boleto.paradaAbordajeLongitud.toFixed(6)}
-                    </Text>
-                  </VStack>
-                </View>
-              </Card>
-
-              {/* Código QR */}
-              <Card className="p-6 bg-blue-50 border border-blue-200 rounded-lg items-center">
-                <Heading size="md" className="text-blue-700 mb-4">📱 Código QR</Heading>
-                <QRCode
-                  value={boleto.codigoQR}
-                  size={width < 768 ? 200 : 250}
-                />
-                <Text className="text-xs text-center mt-4 text-gray-600">
-                  Presenta este código QR al abordar el autobús
+      ) : (
+        <ScrollView style={{ flex: 1, backgroundColor: '#f5f5f5', marginBottom: insets.bottom }}>
+          <VStack className="p-0">
+            {/* Boarding Pass */}
+            <View style={{ backgroundColor: 'white' }}>
+              {/* Header - Green Banner */}
+              <View style={{ backgroundColor: '#00A76F', padding: 20, paddingTop:10 }}>
+                <Text style={{ 
+                  color: 'white', 
+                  fontSize: 18, 
+                  fontWeight: '600',
+                  textAlign: 'center',
+                  marginBottom: 5
+                }}>
+                  BusTix
                 </Text>
-              </Card>
+                <Text style={{ 
+                  color: 'white', 
+                  fontSize: 28, 
+                  fontWeight: 'bold',
+                  textAlign: 'center',
+                  letterSpacing: 2
+                }}>
+                  PASE DE ABORDAJE
+                </Text>
+              </View>
 
-              {/* Detalle del Viaje */}
-              <Card className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                <Heading size="md" className="text-green-700 mb-4">🚍 Detalle del Viaje</Heading>
-                <View className="space-y-3">
-                  <Text className="text-sm text-gray-700">
-                    📋 <Text className="font-semibold">Código del Viaje:</Text> {boleto.detalleViaje.codigoViaje}
-                  </Text>
-                  <Text className="text-sm text-gray-700">
-                    🛣️ <Text className="font-semibold">Ruta:</Text> {boleto.detalleViaje.ciudadOrigen} → {boleto.detalleViaje.ciudadDestino}
-                  </Text>
-                  <Text className="text-sm text-gray-700">
-                    🕐 <Text className="font-semibold">Fecha y Hora de Salida:</Text> {new Date(boleto.detalleViaje.fechaSalida).toLocaleString()}
-                  </Text>
-                  <Text className="text-sm text-gray-700">
-                    🏁 <Text className="font-semibold">Fecha y Hora de Llegada Estimada:</Text> {new Date(boleto.detalleViaje.fechaLlegadaEstimada).toLocaleString()}
-                  </Text>
-                  <Text className="text-sm text-gray-700">
-                    🚐 <Text className="font-semibold">Unidad:</Text> {boleto.detalleViaje.unidadPlacas} ({boleto.detalleViaje.unidadNumeroEconomico})
-                  </Text>
-                </View>
-              </Card>
+              {/* Passenger Section */}
+              <View style={{ backgroundColor: '#f8f9fa', padding: 16 }}>
+                <HStack className="justify-between items-center">
+                  <VStack>
+                    <Text style={{ 
+                      color: '#00A76F', 
+                      fontSize: 16, 
+                      fontWeight: '600',
+                      marginBottom: 8
+                    }}>
+                      Pasajero
+                    </Text>
+                    <Text style={{ color: '#000', fontSize: 16, fontWeight: 'bold' }}>
+                      {boletoData!.nombrePasajero}
+                    </Text>
+                    
+                    <Text style={{ color: '#000', fontSize: 14, fontWeight: '600', marginTop: 8 }}>
+                      {eventName}
+                    </Text>
+                  </VStack>
+                
+                </HStack>
+              </View>
 
-              {/* Información Adicional */}
-              <Card className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <Heading size="sm" className="text-yellow-700 mb-2">⚠️ Información Importante</Heading>
-                <VStack space="xs">
-                  <Text className="text-xs text-gray-700">
-                    • Presenta este boleto y una identificación oficial al abordar
+              {/* Main Content */}
+              <HStack className="p-6" style={{ gap: 15 }}>
+                {/* QR Code Section */}
+                <VStack className="items-center justify-center" style={{ flex: 0.7 }}>
+                  <View style={{ 
+                    padding: 12, 
+                    backgroundColor: 'white',
+                    borderRadius: 8,
+                    borderWidth: 2,
+                    borderColor: '#e0e0e0'
+                  }}>
+                    <QRCode
+                      value={boletoData!.codigoQR}
+                      size={200}
+                    />
+                  </View>
+                </VStack>
+
+                {/* Details Section */}
+                <VStack style={{ flex: 0.3, gap: 12 }}>
+                  {/* Seat */}
+                  <VStack>
+                    <Text style={{ color: '#999', fontSize: 12, marginBottom: 2 }}>Asiento</Text>
+                    <Text style={{ color: '#000', fontSize: 20, fontWeight: 'bold' }}>
+                      {boletoData!.numeroAsiento}
+                    </Text>
+                  </VStack>
+
+                  {/* Board At */}
+                  <VStack>
+                    <Text style={{ color: '#999', fontSize: 12, marginBottom: 2 }}>Abordaje en</Text>
+                    <Text style={{ color: '#000', fontSize: 14, fontWeight: '600' }}>
+                      {addressData?.address || 'N/A'}
+                    </Text>
+                  </VStack>
+
+                  {/* Trip Code */}
+                  <VStack>
+                    <Text style={{ color: '#999', fontSize: 12, marginBottom: 2 }}>Viaje</Text>
+                    <Text style={{ color: '#000', fontSize: 14, fontWeight: '600' }}>
+                      {boletoData!.codigoBoleto}
+                    </Text>
+                  </VStack>
+
+                  {/* Date */}
+                  <VStack>
+                    <Text style={{ color: '#999', fontSize: 12, marginBottom: 2 }}>Fecha</Text>
+                    <Text style={{ color: '#000', fontSize: 14, fontWeight: '600' }}>
+                      {formatDate(boletoData!.detalleViaje.fechaSalida)}
+                    </Text>
+                  </VStack>
+                </VStack>
+              </HStack>
+
+              {/* Route Visualization */}
+              <View style={{ 
+                paddingHorizontal: 24, 
+                paddingVertical: 20,
+                backgroundColor: '#fafafa',
+                borderTopWidth: 1,
+                borderBottomWidth: 1,
+                borderColor: '#e0e0e0'
+              }}>
+                <HStack className="items-center justify-between">
+                  <VStack className="items-center" style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 11, color: '#999', marginBottom: 4 }}>
+                      {addressData?.state || 'Origen'}
+                    </Text>
+                    <Text style={{ fontSize: 28, fontWeight: 'bold', color: '#000' }}>
+                      {addressData?.state?.substring(0, 3).toUpperCase() || 'ORI'}
+                    </Text>
+                  </VStack>
+
+                  <View style={{ alignItems: 'center', paddingHorizontal: 16 }}>
+                    <MaterialIcons name="directions-bus" size={32} color="#00A76F" />
+                    <View style={{ 
+                      height: 2, 
+                      width: 60, 
+                      backgroundColor: '#00A79F',
+                      marginTop: 4
+                    }} />
+                  </View>
+
+                  <VStack className="items-center" style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 11, color: '#999', marginBottom: 4 }}>
+                      {boletoData!.detalleViaje.ciudadDestino}
+                    </Text>
+                    <Text style={{ fontSize: 28, fontWeight: 'bold', color: '#000' }}>
+                      {boletoData!.detalleViaje.ciudadDestino.substring(0, 3).toUpperCase()}
+                    </Text>
+                  </VStack>
+                </HStack>
+              </View>
+
+              {/* Times Section */}
+              <HStack className="justify-between p-6" style={{ backgroundColor: 'white' }}>
+                <VStack className="items-center" style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 11, color: '#999', marginBottom: 4 }}>
+                    Salida
                   </Text>
-                  <Text className="text-xs text-gray-700">
-                    • El asiento está asignado y no puede cambiarse
-                  </Text>
-                  <Text className="text-xs text-gray-700">
-                    • Llega a la parada de abordaje 30 minutos antes de la salida
-                  </Text>
-                  <Text className="text-xs text-gray-700">
-                    • En caso de cancelación, contacta al soporte técnico
+                  <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#000' }}>
+                    {formatTime(boletoData!.detalleViaje.fechaSalida)}
                   </Text>
                 </VStack>
-              </Card>
-            </VStack>
-          </Card>
-        </VStack>
-      </ScrollView>
+
+                <VStack className="items-center" style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 11, color: '#999', marginBottom: 4 }}>
+                    Unidad
+                  </Text>
+                  <Text style={{ fontSize: 14, fontWeight: '600', color: '#000' }}>
+                    {boletoData!.detalleViaje.unidadPlacas}
+                  </Text>
+                </VStack>
+
+                <VStack className="items-center" style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 11, color: '#999', marginBottom: 4 }}>
+                    Llegada
+                  </Text>
+                  <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#000' }}>
+                    {formatTime(boletoData!.detalleViaje.fechaLlegadaEstimada)}
+                  </Text>
+                </VStack>
+              </HStack>
+
+              {/* Footer - Green Banner */}
+              <View style={{ backgroundColor: '#00A76F', padding: 20 }}>
+                <Text style={{ 
+                  color: 'white', 
+                  fontSize: 24, 
+                  fontWeight: 'bold',
+                  textAlign: 'center',
+                  letterSpacing: 2
+                }}>
+                  PASE DE ABORDAJE
+                </Text>
+              </View>
+            </View>
+          </VStack>
+        </ScrollView>
+      )}
     </>
   );
 }

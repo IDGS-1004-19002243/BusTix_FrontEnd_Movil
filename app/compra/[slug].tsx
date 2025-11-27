@@ -207,7 +207,7 @@ export default function CompraScreen() {
             <TouchableOpacity onPress={() => setIsExitModalVisible(true)} className={Platform.OS === 'web' ? "p-2" : ""} activeOpacity={0.7}>
               <Image 
                 source={require('@/assets/icons/back.png')}
-                style={{ width: 24, height: 24, marginLeft: 11, marginRight: 3 }}
+                style={{ width: 24, height: 24, marginLeft: 11, marginRight: Platform.OS === 'web' ? 3 : 18 }}
               />
             </TouchableOpacity>
           )

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, Platform, useWindowDimensions, Dimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Bell, Check, Trash2 } from 'lucide-react-native';
@@ -20,14 +20,57 @@ import {
 import { Heading } from '@/components/ui/heading';
 import { Icon, CloseIcon } from '@/components/ui/icon';
 import { Card } from '@/components/ui/card';
-import { notifications } from './notificationsData';
+import LoadingScreen from '@/components/compra/LoadingScreen';
+import { Notificacion, apiGetMisNotificaciones, apiMarcarNotificacionLeida, apiEliminarNotificacion, apiMarcarTodasLeidas, apiGetCountNoLeidas } from '@/services/notificaciones/notificaciones.service';
 
 const Notifications = () => {
   const [showDrawer, setShowDrawer] = useState(false);
-  const [notificationsList, setNotificationsList] = useState(notifications);
+  const [notificationsList, setNotificationsList] = useState<Notificacion[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
-  const unreadCount = notificationsList.filter(n => !n.read).length;
+
+  useEffect(() => {
+    fetchUnreadCount();
+  }, []);
+
+  useEffect(() => {
+    if (showDrawer && notificationsList.length === 0) {
+      fetchNotifications();
+    }
+  }, [showDrawer]);
+
+  const fetchUnreadCount = async () => {
+    try {
+      const response = await apiGetCountNoLeidas();
+      if (response.success) {
+        setUnreadCount(response.count);
+      }
+    } catch (err: any) {
+      console.error('Error fetching unread count:', err);
+    }
+  };
+
+  const fetchNotifications = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await apiGetMisNotificaciones();
+      if (response.success) {
+        setNotificationsList(response.data);
+        const unread = response.data.filter(n => !n.fueLeida).length;
+        setUnreadCount(unread);
+      } else {
+        setError('Error al obtener notificaciones');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Error al cargar notificaciones');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getDrawerSize = () => {
     const isTablet = width >= 768;
@@ -43,23 +86,47 @@ const Notifications = () => {
     return isTablet ? 'sm' : 'lg';
   };
 
-  const handleMarkAsRead = (id: number) => {
-    setNotificationsList(prev => 
-      prev.map(n => n.id === id ? { ...n, read: true } : n)
-    );
+  const handleMarkAsRead = async (id: number) => {
+    try {
+      const response = await apiMarcarNotificacionLeida(id);
+      if (response.success) {
+        setNotificationsList(prev => prev.map(n => n.notificacionID === id ? { ...n, fueLeida: true, fechaLectura: response.fechaLectura || null } : n));
+        setUnreadCount(prev => Math.max(0, prev - 1));
+      }
+    } catch (err) {
+      console.error('Error marking as read:', err);
+    }
   };
 
-  const handleDelete = (id: number) => {
-    setNotificationsList(prev => prev.filter(n => n.id !== id));
+  const handleDelete = async (id: number) => {
+    try {
+      const response = await apiEliminarNotificacion(id);
+      if (response.success) {
+        const wasUnread = notificationsList.find(n => n.notificacionID === id)?.fueLeida === false;
+        setNotificationsList(prev => prev.filter(n => n.notificacionID !== id));
+        if (wasUnread) setUnreadCount(prev => Math.max(0, prev - 1));
+      }
+    } catch (err) {
+      console.error('Error deleting:', err);
+    }
   };
 
-  const handleMarkAllAsRead = () => {
-    //  ...n copia todas las propiedades del objeto n (notificación) y luego sobrescribe solo la propiedad read con true
-    setNotificationsList(prev => prev.map(n => ({ ...n, read: true })));
+  const handleMarkAllAsRead = async () => {
+    try {
+      const response = await apiMarcarTodasLeidas();
+      if (response.success) {
+        setNotificationsList(prev => prev.map(n => ({ ...n, fueLeida: true, fechaLectura: new Date().toISOString() })));
+        setUnreadCount(0);
+      }
+    } catch (err) {
+      console.error('Error marking all as read:', err);
+    }
   };
 
   const handleDeleteAll = () => {
+    const deletedUnread = notificationsList.filter(n => !n.fueLeida).length;
     setNotificationsList([]);
+    setUnreadCount(prev => Math.max(0, prev - deletedUnread));
   };
 
   return (
@@ -111,41 +178,52 @@ const Notifications = () => {
             </DrawerCloseButton>
           </DrawerHeader>
           <DrawerBody className="flex-1 mt-2">
-            <ScrollView className="flex-1">
-              <VStack className="p-1 gap-3">
-                {notificationsList.map((notification) => (
-                  <Card
-                    key={notification.id}
-                    className={`py-3 px-2 border border-gray-200 ${notification.read ? 'bg-gray-50' : 'bg-blue-50'}`}
-                  >
-                    <Text className="font-semibold text-base">{notification.title}</Text>
-                    <Text className="text-sm text-gray-600 mt-1">{notification.message}</Text>
-                    <Text className="text-xs text-gray-400 mt-2">{notification.time}</Text>
-                    
-                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 16 }}>
-                      {!notification.read && (
+            {loading ? (
+              <LoadingScreen message="Cargando notificaciones..." />
+            ) : error ? (
+              <View className="flex-1 justify-center items-center p-4">
+                <Text className="text-red-500 text-center mb-4">{error}</Text>
+                <Button onPress={fetchNotifications} size="sm" action="positive">
+                  <ButtonText>Reintentar</ButtonText>
+                </Button>
+              </View>
+            ) : (
+              <ScrollView className="flex-1">
+                <VStack className="p-1 gap-3">
+                  {notificationsList.map((notification) => (
+                    <Card
+                      key={notification.notificacionID}
+                      className={`py-3 px-2 border border-gray-200 ${notification.fueLeida ? 'bg-gray-50' : 'bg-blue-50'}`}
+                    >
+                      <Text className="font-semibold text-base">{notification.titulo}</Text>
+                      <Text className="text-sm text-gray-600 mt-1">{notification.mensaje}</Text>
+                      <Text className="text-xs text-gray-400 mt-2">{new Date(notification.fechaCreacion).toLocaleString()}</Text>
+                      
+                      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 16 }}>
+                        {!notification.fueLeida && (
+                          <Button
+                            size="xs"
+                            variant="outline"
+                            action="positive"
+                            onPress={() => handleMarkAsRead(notification.notificacionID)}
+                          >
+                            <ButtonIcon as={Check} size="xs" />
+                          </Button>
+                        )}
                         <Button
                           size="xs"
                           variant="outline"
-                          action="positive"
-                          onPress={() => handleMarkAsRead(notification.id)}
+                          action="negative"
+                          onPress={() => handleDelete(notification.notificacionID)}
                         >
-                          <ButtonIcon as={Check} size="xs" />
+                          <ButtonIcon as={Trash2} size="xs" />
                         </Button>
-                      )}
-                      <Button
-                        size="xs"
-                        variant="outline"
-                        action="negative"
-                        onPress={() => handleDelete(notification.id)}
-                      >
-                        <ButtonIcon as={Trash2} size="xs" />
-                      </Button>
-                    </View>
-                  </Card>
-                ))}
-              </VStack>
-            </ScrollView>
+                      </View>
+                    </Card>
+                  ))}
+                </VStack>
+              </ScrollView>
+            )}
           </DrawerBody>
           <DrawerFooter  >
             <HStack space="sm" className="w-full">

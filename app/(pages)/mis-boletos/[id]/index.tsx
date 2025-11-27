@@ -1,11 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, useWindowDimensions } from 'react-native';
+import { View, ScrollView, useWindowDimensions, Platform } from 'react-native';
 import { VStack } from '@/components/ui/vstack';
 import { HStack } from '@/components/ui/hstack';
 import { Heading } from '@/components/ui/heading';
 import { Text } from '@/components/ui/text';
+import {
+  Accordion,
+  AccordionItem,
+  AccordionHeader,
+  AccordionTrigger,
+  AccordionTitleText,
+  AccordionContent,
+  AccordionIcon,
+} from '@/components/ui/accordion';
 import { Card } from '@/components/ui/card';
 import { Button, ButtonText, ButtonIcon } from '@/components/ui/button';
+import { ChevronDown, ChevronUp } from 'lucide-react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowLeftIcon } from '@/components/ui/icon';
 import { apiGetUserBoletos, EventoUsuario, Transaccion, BoletoUsuario } from '@/services/boletos/boletos.service';
@@ -72,8 +82,8 @@ export default function BoletosEventoDetail() {
       <Seo title={`Boletos - ${evento.nombreEvento}`} description={`Revisa tus boletos para ${evento.nombreEvento}.`} />
 
       {/* Header */}
-      <VStack space="md" className="p-4 bg-white">
-        <HStack space="md" className="items-center">
+      <VStack space="md" className="p-6 bg-white">
+        <HStack space="md" className="items-center mb-4">
           <Button
             variant="outline"
             size="sm"
@@ -99,69 +109,155 @@ export default function BoletosEventoDetail() {
       </VStack>
 
       {/* Transacciones y Boletos */}
-      <VStack space="lg" className="p-4">
+      <Accordion
+        size="md"
+        variant="unfilled"
+        type="multiple"
+        defaultValue={evento.transacciones.filter((t: Transaccion) => t.transaccionID).map((t: Transaccion) => `transaccion-${t.pagoID}`)}
+        className="w-11/12 mx-auto p-4 mb-10"
+      >
         {evento.transacciones
           .filter((transaccion: Transaccion) => transaccion.transaccionID)
           .map((transaccion: Transaccion) => (
-          <Card key={transaccion.pagoID} className="p-4 bg-white border border-gray-200  rounded-lg">
-            <VStack space="md">
-              <Heading size="md" className="text-blue-600 border-b border-gray-200 pb-2">
-                Transacción: {transaccion.codigoPago}
-              </Heading>
+          <AccordionItem key={transaccion.pagoID} value={`transaccion-${transaccion.pagoID}`}>
+            <AccordionHeader>
+              <AccordionTrigger>
+                {({ isExpanded }: { isExpanded: boolean }) => (
+                  <HStack style={{ alignItems: 'center', justifyContent: 'space-between', flex: 1, marginRight: Platform.OS !== 'web' ? 20 : 0 }}>
+                    <AccordionTitleText>
+                      Transacción: {transaccion.codigoPago}
+                    </AccordionTitleText>
+                    {isExpanded ? (
+                      <AccordionIcon as={ChevronUp} size="md" />
+                    ) : (
+                      <AccordionIcon as={ChevronDown} size="md" />
+                    )}
+                  </HStack>
+                )}
+              </AccordionTrigger>
+            </AccordionHeader>
+            <AccordionContent>
+              <VStack space="md" className="p-4">
+                <VStack space="xs" className="p-3 pb-0 rounded-md">
+                  <Text className="text-sm text-black">
+                    <Text className="font-bold text-black">Fecha:</Text> {new Date(transaccion.fechaPago).toLocaleString()}
+                  </Text>
+                  <Text className="text-sm text-black">
+                    <Text className="font-bold text-black">Monto:</Text> ${transaccion.montoTotal.toFixed(2)}
+                  </Text>
+                  <Text className="text-sm text-black">
+                    <Text className="font-bold text-black">Método:</Text> {transaccion.metodoPago}
+                  </Text>
+                </VStack> 
 
-              <VStack space="xs" className="p-3 rounded-md">
-                <Text className="text-sm text-black">
-                  <Text className="font-bold text-black">Fecha:</Text> {new Date(transaccion.fechaPago).toLocaleString()}
-                </Text>
-                <Text className="text-sm text-black">
-                  <Text className="font-bold text-black">Monto:</Text> ${transaccion.montoTotal.toFixed(2)}
-                </Text>
-                <Text className="text-sm text-black">
-                  <Text className="font-bold text-black">Método:</Text> {transaccion.metodoPago}
-                </Text>
-              </VStack> 
-
-              <VStack space="sm" className="p-3 rounded-md">
-                <Heading size="sm" className="text-black">Boletos:</Heading>
-                {transaccion.boletos.map((boleto: BoletoUsuario) => (
-                  <Card key={boleto.boletoID} className="bg-white border border-gray-200 rounded-lg">
-                    <VStack space="sm">
-                      <HStack space="md" className="items-center justify-between">
-                        <VStack space="xs" className="flex-1">
-                          <Text className="font-bold text-md text-blue-600">
-                            {boleto.codigoBoleto}
-                          </Text>
-                          <HStack space="sm">
-                            <Text className="text-sm text-black ">
-                              <Text className="font-bold text-black">Nombre:</Text> {boleto.nombrePasajero}
-                            </Text>
-                            <Text className="text-sm text-black">
-                              <Text className="font-bold text-black">Asiento:</Text> {boleto.numeroAsiento}
-                            </Text>
-                            <Text className="text-sm text-black">
-                              <Text className="font-bold text-black">Unidad:</Text> {boleto.detalleViaje.unidadPlacas}
-                            </Text>
-                          </HStack>
-                        </VStack>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onPress={() => router.push({
-                            pathname: "/boleto/[id]" as any,
-                            params: { id: boleto.boletoID.toString() },
-                          })}
-                        >
-                          <ButtonText>Ver Detalle</ButtonText>
-                        </Button>
-                      </HStack>
-                    </VStack>
-                  </Card>
-                ))}
+                <VStack space="sm" className="px-3 rounded-md">
+                  <Heading size="sm" className="text-black">Boletos:</Heading>
+                  <Accordion
+                    size="md"
+                    variant="unfilled"
+                    type="multiple"
+                    className="w-full"
+                  >
+                    {transaccion.boletos.map((boleto: BoletoUsuario) => (
+                      <AccordionItem key={boleto.boletoID} value={`boleto-${boleto.boletoID}`}>
+                        <AccordionHeader>
+                          <AccordionTrigger>
+                            {({ isExpanded }: { isExpanded: boolean }) => (
+                              <HStack style={{ alignItems: 'center', justifyContent: 'space-between', flex: 1, marginRight: Platform.OS !== 'web' ? 20 : 0 }}>
+                                <HStack style={{ alignItems: 'center', gap: 8 }}>
+                                  <AccordionTitleText>
+                                    {boleto.codigoBoleto} - {boleto.nombrePasajero}
+                                  </AccordionTitleText>
+                                </HStack>
+                                {isExpanded ? (
+                                  <AccordionIcon as={ChevronUp} size="md" />
+                                ) : (
+                                  <AccordionIcon as={ChevronDown} size="md" />
+                                )}
+                              </HStack>
+                            )}
+                          </AccordionTrigger>
+                        </AccordionHeader>
+                        <AccordionContent>
+                          <VStack space="sm" className="p-4 pt-0">
+                            {width < 768 ? (
+                              <VStack space="md" className="items-center">
+                                <VStack space="xs" className="flex-1 w-full">
+                                  <Text className="font-bold text-md" style={{ color: "#00A76F" }}>
+                                    {boleto.codigoBoleto}
+                                  </Text>
+                                  <VStack space="sm">
+                                    <Text className="text-sm text-black ">
+                                      <Text className="font-bold text-black">Nombre:</Text> {boleto.nombrePasajero}
+                                    </Text>
+                                    <Text className="text-sm text-black">
+                                      <Text className="font-bold text-black">Asiento:</Text> {boleto.numeroAsiento}
+                                    </Text>
+                                    <Text className="text-sm text-black">
+                                      <Text className="font-bold text-black">Unidad:</Text> {boleto.detalleViaje.unidadPlacas}
+                                    </Text>
+                                  </VStack>
+                                  </VStack>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onPress={() => router.push({
+                                    pathname: "/boleto/[id]" as any,
+                                    params: { 
+                                      id: evento.eventoID.toString(),
+                                      transaccion: transaccion.transaccionID!.toString(),
+                                      boleto: boleto.boletoID.toString()
+                                    },
+                                  })}
+                                >
+                                  <ButtonText>Ver Detalle</ButtonText>
+                                </Button>
+                              </VStack>
+                            ) : (
+                              <HStack space="md" className="items-center justify-between">
+                                <VStack space="xs" className="flex-1">
+                                  <Text className="font-bold text-md" style={{ color: "#00A76F" }}>
+                                    {boleto.codigoBoleto}
+                                  </Text>
+                                  <HStack space="sm">
+                                    <Text className="text-sm text-black ">
+                                      <Text className="font-bold text-black">Nombre:</Text> {boleto.nombrePasajero}
+                                    </Text>
+                                    <Text className="text-sm text-black">
+                                      <Text className="font-bold text-black">Asiento:</Text> {boleto.numeroAsiento}
+                                    </Text>
+                                    <Text className="text-sm text-black">
+                                      <Text className="font-bold text-black">Unidad:</Text> {boleto.detalleViaje.unidadPlacas}
+                                    </Text>
+                                  </HStack>
+                                </VStack>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onPress={() => router.push({
+                                    pathname: "/boleto/[id]" as any,
+                                    params: { 
+                                      id: evento.eventoID.toString(),
+                                      transaccion: transaccion.transaccionID!.toString(),
+                                      boleto: boleto.boletoID.toString()
+                                    },
+                                  })}
+                                >
+                                  <ButtonText>Ver Detalle</ButtonText>
+                                </Button>
+                              </HStack>
+                            )}
+                          </VStack>
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
+                </VStack>
               </VStack>
-            </VStack>
-          </Card>
+            </AccordionContent>
+          </AccordionItem>
         ))}
-      </VStack>
+      </Accordion>
     </ScrollView>
   );
 }

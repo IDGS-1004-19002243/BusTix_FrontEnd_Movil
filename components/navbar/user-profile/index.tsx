@@ -131,6 +131,7 @@ const UserProfile = () => {
           key="Profile"
           textValue="Profile"
           className={Platform.OS === "web" ? "py-1 px-1" : "p-3"}
+          onPress={() => router.push('/user-profile')}
         >
           <MenuItemLabel size="sm">Perfil</MenuItemLabel>
         </MenuItem>
