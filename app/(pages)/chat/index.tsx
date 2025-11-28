@@ -1,21 +1,93 @@
-import React, { useState } from "react";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+import React, { useState, useRef, useEffect } from "react";
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
+import Markdown from 'react-native-markdown-display';
 import { useSession } from "@/context/AuthContext";
 import { VStack } from "@/components/ui/vstack";
 import { Card } from "@/components/ui/card";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Input, InputField } from "@/components/ui/input";
-import { MessageCircle, Send } from "lucide-react-native";
+import { Send } from "lucide-react-native";
 import { HStack } from "@/components/ui/hstack";
 import { Avatar, AvatarFallbackText } from "@/components/ui/avatar";
 import { useRouter } from "expo-router";
+import { sendMessageToGemini } from "@/services/chatService";
 
 export default function ChatPage() {
   const { isAuthenticated, user } = useSession();
   const router = useRouter();
-  const [message, setMessage] = useState("");
+  const [inputText, setInputText] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [messages, setMessages] = useState<any[]>([
+    {
+      role: 'model',
+      text: '¡Hola! Soy el asistente de soporte de BusTix. ¿En qué puedo ayudarte hoy?',
+      timestamp: new Date()
+    }
+  ]);
 
-  // Pantalla de chat para todos los usuarios
+  const scrollViewRef = useRef<ScrollView>(null);
+
+  useEffect(() => {
+    // Auto-scroll to bottom when messages change
+    setTimeout(() => {
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    }, 100);
+  }, [messages]);
+
+  const handleSend = async () => {
+    if (!inputText.trim()) return;
+
+    const userMessageText = inputText.trim();
+    setInputText("");
+
+    // Add user message immediately
+    const newUserMessage = {
+      role: 'user',
+      text: userMessageText,
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, newUserMessage]);
+    setIsLoading(true);
+
+    try {
+      // Prepare history for API
+      // Gemini requires the conversation to start with a user message.
+      // We filter out any initial model messages (like the welcome message).
+      let history = messages
+        .filter(m => m.role !== 'system')
+        .map(m => ({
+          role: m.role === 'user' ? 'user' : 'model',
+          parts: [{ text: m.text }]
+        }));
+
+      // Remove leading model messages
+      while (history.length > 0 && history[0].role === 'model') {
+        history.shift();
+      }
+
+      // Call the service
+      const responseText = await sendMessageToGemini(history as any, userMessageText);
+
+      const newModelMessage = {
+        role: 'model',
+        text: responseText,
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, newModelMessage]);
+    } catch (error) {
+      console.error(error);
+      setMessages(prev => [...prev, {
+        role: 'model',
+        text: 'Lo siento, tuve un problema al procesar tu mensaje. Por favor intenta de nuevo.',
+        timestamp: new Date()
+      }]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <VStack space="md" className="flex-1 p-4 ">
@@ -37,79 +109,55 @@ export default function ChatPage() {
 
         {/* Área de mensajes */}
         <Card className="flex-1 p-4">
-          <ScrollView style={styles.messagesContainer}>
+          <ScrollView
+            ref={scrollViewRef}
+            style={styles.messagesContainer}
+            contentContainerStyle={{ paddingBottom: 20 }}
+          >
             <VStack space="md">
-              {/* Mensaje de bienvenida del sistema */}
-              <View style={styles.messageContainer}>
-                <HStack space="sm" className="items-start">
-                  <Avatar size="sm">
-                    <AvatarFallbackText>SP</AvatarFallbackText>
-                  </Avatar>
-                  <View style={styles.messageBubble}>
-                    <Text className="text-gray-800">
-                      ¡Hola! Soy el asistente de soporte de BusTix. ¿En qué puedo ayudarte hoy?
-                    </Text>
-                    <Text className="text-xs text-gray-500 mt-1">
-                      {new Date().toLocaleTimeString()}
-                    </Text>
-                  </View>
-                </HStack>
-              </View>
+              {messages.map((msg, index) => (
+                <View key={index} style={styles.messageContainer}>
+                  <HStack space="sm" className={`items-start ${msg.role === 'user' ? 'justify-end' : ''}`}>
+                    {msg.role === 'model' && (
+                      <Avatar size="sm">
+                        <AvatarFallbackText>SP</AvatarFallbackText>
+                      </Avatar>
+                    )}
 
-              {!isAuthenticated && (
+                    <View style={[
+                      styles.messageBubble,
+                      msg.role === 'user' ? styles.userMessage : styles.modelMessage
+                    ]}>
+                      <Markdown
+                        style={msg.role === 'user' ? markdownStylesUser : markdownStylesModel}
+                      >
+                        {msg.text}
+                      </Markdown>
+                      <Text className={`text-xs mt-1 ${msg.role === 'user' ? "text-gray-300" : "text-gray-500"}`}>
+                        {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </Text>
+                    </View>
+
+                    {msg.role === 'user' && (
+                      <Avatar size="sm">
+                        <AvatarFallbackText>{user?.name?.charAt(0) || 'U'}</AvatarFallbackText>
+                      </Avatar>
+                    )}
+                  </HStack>
+                </View>
+              ))}
+
+              {isLoading && (
                 <View style={styles.messageContainer}>
                   <HStack space="sm" className="items-start">
                     <Avatar size="sm">
                       <AvatarFallbackText>SP</AvatarFallbackText>
                     </Avatar>
-                    <View style={[styles.messageBubble, styles.infoMessage]}>
-                      <Text className="text-blue-800">
-                        💡 Para soporte personalizado con tu cuenta, inicia sesión. Sin embargo, puedes hacer consultas generales aquí.
-                      </Text>
-                      <Text className="text-xs text-blue-600 mt-1">
-                        {new Date().toLocaleTimeString()}
-                      </Text>
+                    <View style={[styles.messageBubble, styles.modelMessage]}>
+                      <ActivityIndicator size="small" color="#3B82F6" />
                     </View>
                   </HStack>
                 </View>
-              )}
-
-              {isAuthenticated && (
-                <>
-                  {/* Mensaje de ejemplo del usuario autenticado */}
-                  <View style={styles.messageContainer}>
-                    <HStack space="sm" className="items-start justify-end">
-                      <View style={[styles.messageBubble, styles.userMessage]}>
-                        <Text className="text-white">
-                          Hola, tengo una duda sobre mi boleto de viaje.
-                        </Text>
-                        <Text className="text-xs text-gray-300 mt-1">
-                          {new Date().toLocaleTimeString()}
-                        </Text>
-                      </View>
-                      <Avatar size="sm">
-                        <AvatarFallbackText>{user?.name?.charAt(0) || 'U'}</AvatarFallbackText>
-                      </Avatar>
-                    </HStack>
-                  </View>
-
-                  {/* Mensaje de respuesta del soporte */}
-                  <View style={styles.messageContainer}>
-                    <HStack space="sm" className="items-start">
-                      <Avatar size="sm">
-                        <AvatarFallbackText>SP</AvatarFallbackText>
-                      </Avatar>
-                      <View style={styles.messageBubble}>
-                        <Text className="text-gray-800">
-                          Claro, estaré encantado de ayudarte. ¿Puedes proporcionarme el número de tu boleto o más detalles sobre tu consulta?
-                        </Text>
-                        <Text className="text-xs text-gray-500 mt-1">
-                          {new Date().toLocaleTimeString()}
-                        </Text>
-                      </View>
-                    </HStack>
-                  </View>
-                </>
               )}
             </VStack>
           </ScrollView>
@@ -119,9 +167,9 @@ export default function ChatPage() {
         <HStack space="sm" className="p-4 bg-white rounded-lg">
           <Input className="flex-1">
             <InputField
-              placeholder={isAuthenticated ? "Escribe tu mensaje aquí..." : "Escribe tu consulta general aquí..."}
-              value={message}
-              onChangeText={setMessage}
+              placeholder="Escribe tu mensaje aquí..."
+              value={inputText}
+              onChangeText={setInputText}
               multiline
               maxLength={500}
             />
@@ -129,13 +177,13 @@ export default function ChatPage() {
           <Button
             size="md"
             className="bg-blue-600"
-            disabled={!message.trim()}
+            disabled={!inputText.trim() || isLoading}
+            onPress={handleSend}
           >
             <Send size={20} color="white" />
           </Button>
         </HStack>
 
- 
       </VStack>
     </View>
   );
@@ -152,20 +200,46 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   messageBubble: {
-    backgroundColor: '#F3F4F6',
     padding: 12,
     borderRadius: 16,
     maxWidth: '80%',
+  },
+  modelMessage: {
+    backgroundColor: '#F3F4F6',
     borderBottomLeftRadius: 4,
   },
   userMessage: {
     backgroundColor: '#3B82F6',
-    borderBottomLeftRadius: 16,
     borderBottomRightRadius: 4,
+    borderBottomLeftRadius: 16,
   },
   infoMessage: {
     backgroundColor: '#DBEAFE',
     borderColor: '#3B82F6',
     borderWidth: 1,
   },
+});
+
+const markdownStylesUser = StyleSheet.create({
+  body: { color: 'white', fontSize: 16 },
+  heading1: { color: 'white', fontSize: 24, fontWeight: 'bold', marginBottom: 10 },
+  heading2: { color: 'white', fontSize: 20, fontWeight: 'bold', marginBottom: 10 },
+  paragraph: { color: 'white', fontSize: 16, marginBottom: 10 },
+  list_item: { color: 'white', fontSize: 16, marginBottom: 5 },
+  bullet_list: { color: 'white', marginBottom: 10 },
+  ordered_list: { color: 'white', marginBottom: 10 },
+  strong: { color: 'white', fontWeight: 'bold' },
+  em: { color: 'white', fontStyle: 'italic' },
+});
+
+const markdownStylesModel = StyleSheet.create({
+  body: { color: '#1F2937', fontSize: 16 },
+  heading1: { color: '#1F2937', fontSize: 24, fontWeight: 'bold', marginBottom: 10 },
+  heading2: { color: '#1F2937', fontSize: 20, fontWeight: 'bold', marginBottom: 10 },
+  paragraph: { color: '#1F2937', fontSize: 16, marginBottom: 10 },
+  list_item: { color: '#1F2937', fontSize: 16, marginBottom: 5 },
+  bullet_list: { color: '#1F2937', marginBottom: 10 },
+  ordered_list: { color: '#1F2937', marginBottom: 10 },
+  strong: { color: '#1F2937', fontWeight: 'bold' },
+  em: { color: '#1F2937', fontStyle: 'italic' },
 });
