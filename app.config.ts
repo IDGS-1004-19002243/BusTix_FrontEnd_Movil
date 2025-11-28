@@ -67,7 +67,12 @@ const getAppName = () => {
         "backgroundColor": "#0F0F0F"
       },
       "edgeToEdgeEnabled": true,
-      "package": getUniqueIdentifier()
+      "package": getUniqueIdentifier(),
+      "config": {
+        "googleMaps": {
+          "apiKey": process.env.EXPO_GOOGLE_MAPS_API_KEY || ""
+        }
+      }
     },
     "web": {
       "bundler": "metro",
@@ -78,7 +83,14 @@ const getAppName = () => {
       "expo-router",
       "expo-web-browser",
       "expo-font",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-maps",
+        {
+          "requestLocationPermission": true,
+          "locationPermission": "Permitir que $(PRODUCT_NAME) use tu ubicación"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

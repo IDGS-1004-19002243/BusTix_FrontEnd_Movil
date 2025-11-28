@@ -26,9 +26,37 @@ export interface GetPerfilResponse {
   data: PerfilUsuario;
 }
 
+export interface UpdateProfileDto {
+  nombreCompleto: string;
+  telefono: string;
+  direccion: string;
+  ciudad: string;
+  estado: string;
+  codigoPostal: string;
+  urlFotoPerfil?: string;
+  notificacionesPush: boolean;
+  notificacionesEmail: boolean;
+}
+
+export interface UpdatePerfilResponse {
+  success: boolean;
+  message: string;
+  data?: any;
+}
+
 export async function apiGetMiPerfil(): Promise<GetPerfilResponse> {
   try {
     const response = await axios.get<GetPerfilResponse>('/me/perfil');
+    return response.data;
+  } catch (error: any) {
+    const categorizedError = categorizeError(error);
+    throw categorizedError;
+  }
+}
+
+export async function apiUpdateMiPerfil(dto: UpdateProfileDto): Promise<UpdatePerfilResponse> {
+  try {
+    const response = await axios.put<UpdatePerfilResponse>('/me/perfil', dto);
     return response.data;
   } catch (error: any) {
     const categorizedError = categorizeError(error);

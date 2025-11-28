@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { getTokens, setTokens, clearTokens } from './tokenStore';
-import { decodeToken } from './jwtUtils';
+import { decodeToken, isTokenExpired } from './jwtUtils';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -10,7 +10,34 @@ axios.defaults.baseURL = API_BASE_URL;
 // Interceptor de request: Agregar token automáticamente si existe
 axios.interceptors.request.use(
   async (config) => {
-    const { token } = await getTokens();
+    let { token, refreshToken } = await getTokens();
+    
+    if (token && isTokenExpired(token)) {
+      // Intentar refrescar el token si ha expirado
+      try {
+        const user = decodeToken(token);
+        const email = user?.email;
+        
+        if (refreshToken && email) {
+          const response = await axios.post('/account/refresh-token', {
+            email,
+            refreshToken,
+          });
+          
+          const { token: newToken, refreshToken: newRefreshToken } = response.data;
+          
+          // Guardar nuevos tokens
+          await setTokens({ token: newToken, refreshToken: newRefreshToken });
+          
+          token = newToken;
+        }
+      } catch (refreshError) {
+        // Si falla el refresh, limpiar tokens
+        await clearTokens();
+        token = null;
+      }
+    }
+    
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

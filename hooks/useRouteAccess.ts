@@ -41,15 +41,16 @@ export function useRouteAccess(pathname?: string) {
   // - Si la ruta NO requiere roles específicos (requiresRole = false), entonces:
   //   - Permitir acceso a todos (público o semi-público).
   // - Si la ruta SÍ requiere roles (requiresRole = true), entonces:
-  //   - El usuario debe estar autenticado (isAuthenticated = true) Y tener un rol permitido (hasRole = true).
+  //   - El usuario debe estar autenticado (isAuthenticated = true) Y tener un rol permitido (hasRole = true),
+  //     O la ruta permite acceso a no autenticados si incluye '' en allowedRoles.
   let allowed: boolean;
 
   if (!requiresRole) { // No requires roles
     //:acceso permitido para todos
     allowed = true;
   } else {
-    //:acceso restringido a usuarios autenticados con rol correcto
-    allowed = isAuthenticated && hasRole;
+    //:acceso restringido a usuarios autenticados con rol correcto, o a no autenticados si '' está incluido
+    allowed = (isAuthenticated && hasRole) || allowedRoles.includes('');
   }
 
   // Retornar objeto con toda la información necesaria para el componente que usa el hook

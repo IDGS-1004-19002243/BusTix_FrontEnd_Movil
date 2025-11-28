@@ -13,11 +13,12 @@ export const styles = StyleSheet.create({
   card: {
     overflow: 'hidden',
     borderRadius: 12,
-    height: 350,
+    height: 380,
   },
   cardMobile: {
     overflow: 'hidden',
-    borderRadius: 12,
+    borderRadius: 12, 
+    // Como en mobil se muestra una sola columna, no es necesario limitar la altura
   },
   eventImage: {
     width: '100%',

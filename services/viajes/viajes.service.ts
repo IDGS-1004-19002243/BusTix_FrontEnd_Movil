@@ -45,3 +45,16 @@ export async function apiCalcularPrecio(viajeId: number, paradaAbordajeId?: numb
         throw categorizedError;
     }
 }
+
+/**
+ * Obtiene los viajes asignados al chofer (operador)
+ */
+export async function apiGetMisViajesChofer(): Promise<Viaje[]> {
+    try {
+        const response = await axios.get<Viaje[]>('/Viajes/mis-viajes');
+        return response.data;
+    } catch (error: any) {
+        const categorizedError = categorizeError(error);
+        throw categorizedError;
+    }
+}

@@ -1,7 +1,8 @@
 export const routeRoles: Record<string, string[]> = {
   '/home': [],
-  '/eventos': [],
+  '/eventos': ['User', ''],
   '/mis-boletos': ['User'],
-  '/user-profile': ['User'],
-  '/chat': [],
+  '/user-profile': ['User','Admin', 'Manager', 'Staff', 'Operator'],
+  '/chat': ['User', ''],
+  '/mis-viajes': ['Operator'],
 };

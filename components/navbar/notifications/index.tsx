@@ -45,7 +45,7 @@ const Notifications = () => {
 
   // Hook de polling inteligente
   const { refreshNow } = useNotificationsPolling({
-    interval: 30000, // 30 segundos
+    interval: 10000, // 10 segundos
     enabled: true,
     onUnreadCountChange: handleUnreadCountChange
   });
@@ -56,10 +56,7 @@ const Notifications = () => {
     }
   }, [showDrawer]);
 
-  const fetchUnreadCount = async () => {
-    // Esta función ahora delega al hook de polling
-    refreshNow();
-  };
+
 
   const fetchNotifications = async () => {
     setLoading(true);
@@ -105,7 +102,6 @@ const Notifications = () => {
         setTimeout(() => refreshNow(), 500);
       }
     } catch (err) {
-      console.error('Error marking as read:', err);
     } finally {
       setMarkingAsRead(prev => {
         const newSet = new Set(prev);
@@ -135,7 +131,6 @@ const Notifications = () => {
         // Sincronizar con el servidor después del cambio local
         setTimeout(() => refreshNow(), 500);
       } else {
-        console.error('Error deleting:', err);
       }
     } finally {
       setDeleting(prev => {
@@ -157,7 +152,6 @@ const Notifications = () => {
         setTimeout(() => refreshNow(), 500);
       }
     } catch (err) {
-      console.error('Error marking all as read:', err);
     } finally {
       setLoadingMarkAll(false);
     }
@@ -173,8 +167,7 @@ const Notifications = () => {
       // Sincronizar con el servidor después del cambio local
       setTimeout(() => refreshNow(), 500);
     } catch (err) {
-      console.error('Error deleting all:', err);
-      // Still clear local list even if some deletes failed
+          // Still clear local list even if some deletes failed
       setNotificationsList([]);
       setUnreadCount(0);
       // Sincronizar con el servidor después del cambio local

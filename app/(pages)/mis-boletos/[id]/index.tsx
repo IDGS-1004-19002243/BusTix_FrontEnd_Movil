@@ -13,7 +13,7 @@ import {
   AccordionContent,
   AccordionIcon,
 } from '@/components/ui/accordion';
-import { Card } from '@/components/ui/card';
+import { Badge, BadgeText } from '@/components/ui/badge';
 import { Button, ButtonText, ButtonIcon } from '@/components/ui/button';
 import { ChevronDown, ChevronUp } from 'lucide-react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -23,6 +23,28 @@ import LoadingScreen from '@/components/compra/LoadingScreen';
 import Seo from '@/components/helpers/Seo';
 import QRCode from 'react-native-qrcode-svg';
 import { formatDate } from '@/components/eventos/hooks/useEventos';
+
+const getEstatusBadge = (estatus: string | number) => {
+  const statusMap: Record<string | number, { text: string; variant: 'success' | 'error' | 'warning' | 'info' | 'muted' }> = {
+    9: { text: 'Pendiente', variant: 'warning' },
+    'BOL_PENDIENTE': { text: 'Pendiente', variant: 'warning' },
+    10: { text: 'Pagado', variant: 'success' },
+    'BOL_PAGADO': { text: 'Pagado', variant: 'success' },
+    11: { text: 'Validado', variant: 'info' },
+    'BOL_VALIDADO': { text: 'Validado', variant: 'info' },
+    12: { text: 'Usado', variant: 'muted' },
+    'BOL_USADO': { text: 'Usado', variant: 'muted' },
+    13: { text: 'Cancelado', variant: 'error' },
+    'BOL_CANCELADO': { text: 'Cancelado', variant: 'error' },
+    14: { text: 'Pendiente', variant: 'warning' },
+    'PAG_PENDIENTE': { text: 'Pendiente', variant: 'warning' },
+    15: { text: 'Capturado', variant: 'success' },
+    'PAG_CAPTURADO': { text: 'Capturado', variant: 'success' },
+    16: { text: 'Rechazado', variant: 'error' },
+    'PAG_RECHAZADO': { text: 'Rechazado', variant: 'error' },
+  };
+  return statusMap[estatus] || { text: estatus.toString(), variant: 'muted' as const };
+};
 
 export default function BoletosEventoDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -196,6 +218,12 @@ export default function BoletosEventoDetail() {
                                     <Text className="text-sm text-black">
                                       <Text className="font-bold text-black">Unidad:</Text> {boleto.detalleViaje.unidadPlacas}
                                     </Text>
+                                    <HStack space="sm" className="items-center">
+                                      <Text className="font-bold text-black">Estatus:</Text>
+                                      <Badge action={getEstatusBadge(boleto.estatus).variant}>
+                                        <BadgeText>{getEstatusBadge(boleto.estatus).text}</BadgeText>
+                                      </Badge>
+                                    </HStack>
                                   </VStack>
                                   </VStack>
                                 <Button
@@ -229,6 +257,12 @@ export default function BoletosEventoDetail() {
                                     <Text className="text-sm text-black">
                                       <Text className="font-bold text-black">Unidad:</Text> {boleto.detalleViaje.unidadPlacas}
                                     </Text>
+                                    <HStack space="sm" className="items-center">
+                                      <Text className="font-bold text-black">Estatus:</Text>
+                                      <Badge action={getEstatusBadge(boleto.estatus).variant}>
+                                        <BadgeText>{getEstatusBadge(boleto.estatus).text}</BadgeText>
+                                      </Badge>
+                                    </HStack>
                                   </HStack>
                                 </VStack>
                                 <Button

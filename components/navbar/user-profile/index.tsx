@@ -34,8 +34,10 @@ const truncateUserName = (userName: string, maxLength: number = 15): string => {
 const getRoleBadgeAction = (role: string) => {
   const roleColors = {
     admin: "info",
-    manager: "warning",
+    manager: "muted",
     user: "success",
+    operator: "warning",
+    staff: "error",
   } as const;
 
   return roleColors[role.toLowerCase() as keyof typeof roleColors] || "error";
