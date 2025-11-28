@@ -2,9 +2,12 @@ import axios from 'axios';
 import { getTokens, setTokens, clearTokens } from './tokenStore';
 import { decodeToken } from './jwtUtils';
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
+// Usar la URL pública del backend por defecto. Normalizamos para que SIEMPRE
+// termine en `/api` y evitar inconsistencias entre entornos (con o sin `/api`).
+const rawBase = process.env.EXPO_PUBLIC_API_URL ?? 'https://waldoz-001-site1.stempurl.com/api';
+const API_BASE_URL = rawBase.endsWith('/api') ? rawBase : rawBase.replace(/\/$/, '') + '/api';
 
-// Configurar axios con la URL base
+// Configurar axios con la URL base estandarizada
 axios.defaults.baseURL = API_BASE_URL;
 
 // Interceptor de request: Agregar token automáticamente si existe

@@ -15,14 +15,14 @@ import { routeRoles } from '@/config/routeRoles';
 export function useRouteAccess(pathname?: string) {
   // Obtener estado de autenticación y usuario desde el contexto
   const { isAuthenticated, isLoading, user } = useSession();
-  const role = user?.roles?.[0] || null;
+  const userRoles = (user?.roles || []).map(r => r.toString().toLowerCase());
 
   // Determinar la ruta actual (parámetro opcional o ruta del router)
   const current = pathname ?? usePathname();
 
   // Obtener los roles permitidos para esta ruta desde la configuración
   // Si no hay configuración, devuelve array vacío (sin restricciones)
-  const allowedRoles = routeRoles[current] || [];
+  const allowedRoles = (routeRoles[current] || []).map(r => r.toLowerCase());
 
   // Verificar si esta ruta requiere algún rol específico
   const requiresRole = allowedRoles.length > 0;
@@ -33,8 +33,9 @@ export function useRouteAccess(pathname?: string) {
   // - Luego verificamos si ese rol está en la lista de roles permitidos para la ruta
   // - Asignamos true solo si ambas condiciones se cumplen
   let hasRole = false;
-  if (role) {
-    hasRole = allowedRoles.includes(role);
+  if (userRoles.length > 0) {
+    // Verificar si algún rol del usuario está en la lista de roles permitidos
+    hasRole = allowedRoles.length === 0 ? true : allowedRoles.some(ar => userRoles.includes(ar));
   }
 
   //  Determinar si el acceso está permitido
@@ -44,11 +45,9 @@ export function useRouteAccess(pathname?: string) {
   //   - El usuario debe estar autenticado (isAuthenticated = true) Y tener un rol permitido (hasRole = true).
   let allowed: boolean;
 
-  if (!requiresRole) { // No requires roles
-    //:acceso permitido para todos
+  if (!requiresRole) {
     allowed = true;
   } else {
-    //:acceso restringido a usuarios autenticados con rol correcto
     allowed = isAuthenticated && hasRole;
   }
 

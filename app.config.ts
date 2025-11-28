@@ -79,7 +79,12 @@ const getAppName = () => {
       "expo-web-browser",
       "expo-font",
       "expo-secure-store",
-      "expo-barcode-scanner"
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Permitir que BusTix use la cámara para escanear códigos QR de boletos."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

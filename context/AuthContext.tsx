@@ -65,6 +65,10 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       const decodedToken = decodeToken(token);
 
       if (!decodedToken) {
+        // Token inválido o expirado: limpiar almacenamiento para evitar uso accidental
+        try {
+          await clearTokens();
+        } catch {}
         setSession(null);
         setUser(null);
         setIsLoading(false);
@@ -174,7 +178,12 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
           setLoginSuccess(true);
           setIsTransitioning(true);
         } else {
-          setLoginErrorMessage("Token inválido recibido");
+          // Token inválido o vacío
+          if (!response.token || response.token.trim() === '') {
+            setLoginErrorMessage(response.message || "Credenciales incorrectas");
+          } else {
+            setLoginErrorMessage("Token inválido recibido");
+          }
         }
       } else {
         setLoginErrorMessage(response.message || "Error");

@@ -2,6 +2,7 @@ import React from "react";
 import { useSession } from "@/context/AuthContext";
 import AuthenticatedHome from "@/components/home/AuthenticatedHome";
 import UnauthenticatedHome from "@/components/home/UnauthenticatedHome";
+import StaffHome from "@/components/home/StaffHome";
 
 export default function HomePage() {
   const { isAuthenticated, user } = useSession();
@@ -20,8 +21,14 @@ export default function HomePage() {
 
   //  Si user?.roles?.[0] resulta undefined,la condicion del if seria:
   //   undefined === 'User' que es false y si hubiera un else entraría alli
-  if (user?.roles?.[0] === 'User') {
+  // Preferir role 'User' para clientes normales
+  if (user?.roles?.includes('User')) {
     return <AuthenticatedHome />;
+  }
+
+  // Mostrar Home específico para Staff
+  if (user?.roles?.includes('Staff')) {
+    return <StaffHome />;
   }
 
   return <UnauthenticatedHome />;

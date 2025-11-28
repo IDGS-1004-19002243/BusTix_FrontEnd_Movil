@@ -19,17 +19,24 @@ export const SidebarBody: React.FC<SidebarBodyProps> = ({
   const { user } = useSession();
 
   // Función helper para verificar acceso basado en routeRoles o roles del item
+  // - Soporta múltiples roles por usuario
+  // - Comparación case-insensitive para evitar problemas de mayúsculas/minúsculas
   const hasAccess = (route: string | undefined, itemRoles?: string[]) => {
-    const role = user?.roles?.[0] || '';
+    const userRoles = (user?.roles || []).map(r => r?.toString().toLowerCase());
+
     if (route) {
       const normalized = route.replace('/(pages)', '');
-      const allowedRoles = routeRoles[normalized] || [];
-      return allowedRoles.length === 0 || allowedRoles.includes(role);
+      const allowedRoles = (routeRoles[normalized] || []).map(r => r.toLowerCase());
+      // Si no hay roles requeridos, permitir
+      if (allowedRoles.length === 0) return true;
+      // Verificar intersección entre roles del usuario y roles permitidos
+      return allowedRoles.some(ar => userRoles.includes(ar));
     } else if (itemRoles && itemRoles.length > 0) {
-      return itemRoles.includes(role);
+      const allowed = itemRoles.map(r => r.toLowerCase());
+      return allowed.some(ar => userRoles.includes(ar));
     } else {
-      // Items sin route ni roles: mostrar solo si el usuario está autenticado
-      return !!role;
+      // Items sin route ni roles: mostrar solo si el usuario tiene al menos un rol
+      return userRoles.length > 0;
     }
   };
 
