@@ -11,6 +11,9 @@ import { HStack } from "@/components/ui/hstack";
 import { Avatar, AvatarFallbackText } from "@/components/ui/avatar";
 import { useRouter } from "expo-router";
 import { sendMessageToGemini } from "@/services/chatService";
+import Animated from 'react-native-reanimated';
+import { useAnimatedStyle } from 'react-native-reanimated';
+import useGradualAnimation from '@/hooks/useGradualAnimation';
 
 export default function ChatPage() {
   const { isAuthenticated, user } = useSession();
@@ -26,6 +29,11 @@ export default function ChatPage() {
   ]);
 
   const scrollViewRef = useRef<ScrollView>(null);
+  const { height } = useGradualAnimation(0);
+
+  const keyboardPaddingStyle = useAnimatedStyle(() => ({
+    height: height.value,
+  }), []);
 
   useEffect(() => {
     // Auto-scroll to bottom when messages change
@@ -90,7 +98,7 @@ export default function ChatPage() {
 
   return (
     <View style={styles.container}>
-      <VStack space="md" className="flex-1 p-4 ">
+      <VStack space="md" className="flex-1 pt-4 px-4">
         {/* Header */}
         <HStack space="sm" className="items-center p-4 bg-white rounded-lg">
           <Avatar size="md">
@@ -140,7 +148,7 @@ export default function ChatPage() {
 
                     {msg.role === 'user' && (
                       <Avatar size="sm">
-                        <AvatarFallbackText>{user?.name?.charAt(0) || 'U'}</AvatarFallbackText>
+                        <AvatarFallbackText>{user?.name || 'U'}</AvatarFallbackText>
                       </Avatar>
                     )}
                   </HStack>
@@ -163,8 +171,10 @@ export default function ChatPage() {
           </ScrollView>
         </Card>
 
+
+
         {/* Área de entrada de mensaje */}
-        <HStack space="sm" className="p-4 bg-white rounded-lg">
+        <HStack space="sm" className="px-4 py-2 bg-white rounded-lg">
           <Input className="flex-1">
             <InputField
               placeholder="Escribe tu mensaje aquí..."
@@ -182,8 +192,11 @@ export default function ChatPage() {
           >
             <Send size={20} color="white" />
           </Button>
-        </HStack>
 
+          {/* Spacer animado para el teclado */}
+          <Animated.View style={keyboardPaddingStyle} />
+
+        </HStack>
       </VStack>
     </View>
   );

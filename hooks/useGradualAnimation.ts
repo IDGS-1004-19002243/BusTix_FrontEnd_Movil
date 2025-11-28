@@ -2,21 +2,15 @@
 // Propósito: medir la altura del teclado y devolverla para usar en animaciones.
 // Devuelve: { height } donde `height` (altura) es una shared value (valor compartido)
 // de Reanimated que cambia cuando el teclado aparece o se oculta.
+// Parámetro opcional: offset (margen extra en px), por defecto 42.
 
 import { useKeyboardHandler } from 'react-native-keyboard-controller';
 import { useSharedValue } from 'react-native-reanimated';
 
-// OFFSET (margen extra): px que siempre añadimos a la altura del teclado
-// para dejar algo de separación entre el contenido y el teclado.
-const OFFSET = 42;
-
 // Hook
-export const useGradualAnimation = () => {
-  // Mínimo espacio que queremos mantener.
-  const totalOffset = OFFSET;
-
+export const useGradualAnimation = (offset: number = 42) => {
   // `height` es la shared value (valor compartido) que usará el layout.
-  const height = useSharedValue<number>(totalOffset);
+  const height = useSharedValue<number>(0);
 
   // Escucha los movimientos del teclado y actualiza `height`.
   // El callback corre como worklet (worklet: función que corre en el hilo de animación).
@@ -24,9 +18,9 @@ export const useGradualAnimation = () => {
     {
       onMove: (e) => {
         'worklet';
-        // Si el teclado está abierto e.height > 0, usamos teclado + OFFSET.
-        // Si está cerrado, volvemos al mínimo (totalOffset).
-        height.value = e.height > 0 ? Math.max(e.height + OFFSET, totalOffset) : totalOffset;
+        // Si el teclado está abierto e.height > 0, usamos teclado + offset.
+        // Si está cerrado, no hay espacio extra.
+        height.value = e.height > 0 ? e.height + offset : 0;
       },
     },
     [],
