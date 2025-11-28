@@ -62,27 +62,29 @@ export default function AuthenticatedHome() {
           {greeting} <Text className="font-bold">{userName}</Text>
         </Text>
 
-        <View className="flex flex-row flex-wrap">
-          {categories.map((item) => {
+        {user?.roles?.[0] === 'User' && (
+          <View className="flex flex-row flex-wrap">
+            {categories.map((item) => {
 
-    
-            const itemClassName = isMobile ? 'w-1/2 p-2' : 'w-1/3 p-2';
-            return (
-              <View key={item} className={itemClassName}>
-                <Pressable onPress={() => router.push('/eventos')}>
-                  <Card className={`p-6 ${getCategoryBgColor(item)}`}>
-                    <VStack space="md">
-                      <HStack className="justify-end">
-                        {getCategoryIcon(item)}
-                      </HStack>
-                      <Text className="text-black text-lg font-semibold">{item}</Text>
-                    </VStack>
-                  </Card>
-                </Pressable>
-              </View>
-            );
-          })}
-        </View>
+
+              const itemClassName = isMobile ? 'w-1/2 p-2' : 'w-1/3 p-2';
+              return (
+                <View key={item} className={itemClassName}>
+                  <Pressable onPress={() => router.push('/eventos')}>
+                    <Card className={`p-6 ${getCategoryBgColor(item)}`}>
+                      <VStack space="md">
+                        <HStack className="justify-end">
+                          {getCategoryIcon(item)}
+                        </HStack>
+                        <Text className="text-black text-lg font-semibold">{item}</Text>
+                      </VStack>
+                    </Card>
+                  </Pressable>
+                </View>
+              );
+            })}
+          </View>
+        )}
 
 
       </ScrollView>
