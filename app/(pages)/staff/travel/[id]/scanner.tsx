@@ -19,6 +19,17 @@ export default function ScannerPage() {
   const { isAuthenticated, user, isLoading: authLoading } = useSession();
   const router = useRouter();
   
+  console.log('\n🎬 ════════════════════════════════════════');
+  console.log('📱 SCANNER PAGE - Componente montado');
+  console.log('════════════════════════════════════════');
+  console.log('🆔 Viaje ID:', id);
+  console.log('🔐 Autenticado:', isAuthenticated);
+  console.log('👤 Usuario:', user?.email);
+  console.log('🎭 Roles:', user?.roles);
+  console.log('⏳ Auth Loading:', authLoading);
+  console.log('🌐 API Base URL:', api.defaults.baseURL);
+  console.log('════════════════════════════════════════\n');
+  
   // Scanner state con expo-camera
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
@@ -37,9 +48,21 @@ export default function ScannerPage() {
     let mounted = true;
     const load = async () => {
       if (!id) return;
+      
+      console.log('🚀 SCANNER - Cargando información del viaje');
+      console.log('🆔 Viaje ID:', id);
+      
       try {
+        console.log('📡 Llamando a /viajes/' + id + '/manifiesto');
         const resp = await api.get(`/viajes/${id}/manifiesto`);
-        if (!mounted) return;
+        
+        if (!mounted) {
+          console.log('⚠️ Componente desmontado, cancelando actualización');
+          return;
+        }
+        
+        console.log('✅ Manifiesto cargado:', JSON.stringify(resp.data, null, 2).substring(0, 300));
+        
         const data = resp.data;
         setViaje({
           codigoViaje: data.codigoViaje ?? data.CodigoViaje,
@@ -50,14 +73,30 @@ export default function ScannerPage() {
           abordados: data.pasajerosAbordados ?? data.PasajerosAbordados ?? 0,
           pendientes: data.pasajerosPendientes ?? data.PasajerosPendientes ?? 0,
         });
-      } catch (err) {
+        
+        console.log('📊 Stats configurados:', {
+          total: data.totalPasajeros ?? data.TotalPasajeros ?? 0,
+          abordados: data.pasajerosAbordados ?? data.PasajerosAbordados ?? 0,
+          pendientes: data.pasajerosPendientes ?? data.PasajerosPendientes ?? 0,
+        });
+        
+      } catch (err: any) {
+        console.log('❌ Error cargando viaje');
+        console.log('📝 Error:', err?.message);
+        console.log('📊 Response:', err?.response?.data);
         console.warn('Error cargando viaje', err);
       } finally {
-        if (mounted) setLoadingViaje(false);
+        if (mounted) {
+          setLoadingViaje(false);
+          console.log('✅ Loading viaje finalizado\n');
+        }
       }
     };
     load();
-    return () => { mounted = false; };
+    return () => { 
+      mounted = false; 
+      console.log('🔚 Scanner cleanup - componente desmontado\n');
+    };
   }, [id]);
 
 
@@ -87,15 +126,24 @@ export default function ScannerPage() {
   // Actualizar estadísticas
   const updateStats = useCallback(async () => {
     if (!id) return;
+    
+    console.log('🔄 Actualizando estadísticas del viaje...');
+    
     try {
       const resp = await api.get(`/viajes/${id}/manifiesto`);
       const data = resp.data;
-      setStats({
+      
+      const newStats = {
         total: data.totalPasajeros ?? data.TotalPasajeros ?? 0,
         abordados: data.pasajerosAbordados ?? data.PasajerosAbordados ?? 0,
         pendientes: data.pasajerosPendientes ?? data.PasajerosPendientes ?? 0,
-      });
-    } catch (err) {
+      };
+      
+      setStats(newStats);
+      
+      console.log('✅ Stats actualizados:', newStats);
+    } catch (err: any) {
+      console.log('❌ Error actualizando stats:', err?.message);
       console.warn('Error actualizando stats', err);
     }
   }, [id]);
@@ -107,36 +155,108 @@ export default function ScannerPage() {
     setScanned(true);
     const data = result.data;
     
+    console.log('═══════════════════════════════════════');
+    console.log('🔍 SCANNER - Inicio de validación');
+    console.log('═══════════════════════════════════════');
+    console.log('📱 QR Escaneado:', data);
+    console.log('🚌 Viaje ID:', id);
+    console.log('⏰ Timestamp:', new Date().toISOString());
+    
     try {
       const payload = { 
         ViajeID: Number(id), 
         CodigoQR: data 
       };
       
+      console.log('📤 Payload enviado:', JSON.stringify(payload, null, 2));
+      console.log('🌐 Endpoint:', '/boletos/validar');
+      console.log('⏳ Enviando request...');
+      
       const resp = await api.post('/boletos/validar', payload);
       
+      console.log('✅ Response recibida - Status:', resp.status);
+      console.log('📦 Response data completa:', JSON.stringify(resp.data, null, 2));
+      
       const respData = resp.data?.data ?? resp.data;
+      const success = respData?.success ?? respData?.Success ?? resp.data?.success ?? true;
+      const resultado = respData?.resultado ?? respData?.Resultado ?? resp.data?.resultado ?? '';
       const message = respData?.mensaje ?? respData?.Mensaje ?? resp.data?.message ?? respData?.Message ?? 'Boleto validado correctamente';
       
-      showNotification('success', message);
+      console.log('💬 Mensaje extraído:', message);
+      console.log('🎯 Success:', success);
+      console.log('📋 Resultado:', resultado);
+      
+      // Determinar tipo de notificación basado en la respuesta
+      const msgLower = message.toLowerCase();
+      
+      if (success && (resultado === 'Aprobado' || resultado === 'aprobado')) {
+        // ✅ VERDE: Validación exitosa
+        console.log('✅ VALIDACIÓN EXITOSA - Color VERDE');
+        showNotification('success', message);
+      } else if (msgLower.includes('ya fue validado') || 
+                 msgLower.includes('ya registrada') ||
+                 msgLower.includes('repetido') ||
+                 msgLower.includes('duplicado') ||
+                 msgLower.includes('ya validado') ||
+                 resultado === 'Rechazado') {
+        // ⚠️ AMARILLO: Ya fue usado/validado previamente
+        console.log('⚠️ BOLETO YA VALIDADO - Color AMARILLO');
+        showNotification('warning', message);
+      } else {
+        // Por defecto mostrar como éxito si no hay indicadores de error
+        console.log('✅ VALIDACIÓN OK - Color VERDE');
+        showNotification('success', message);
+      }
+      
+      console.log('═══════════════════════════════════════\n');
       await updateStats();
       
     } catch (err: any) {
+      console.log('❌ ERROR en validación');
+      console.log('─────────────────────────────────────');
+      console.log('🔴 Error completo:', err);
+      console.log('📊 Error response:', err?.response);
+      console.log('📝 Error data:', JSON.stringify(err?.response?.data, null, 2));
+      console.log('🔢 Status code:', err?.response?.status);
+      console.log('📋 Headers:', err?.response?.headers);
+      console.log('🌐 Config URL:', err?.config?.url);
+      console.log('🔑 Config baseURL:', err?.config?.baseURL);
+      console.log('📤 Config data:', err?.config?.data);
+      console.log('🔐 Auth header:', err?.config?.headers?.Authorization);
+      
       const errorData = err?.response?.data;
       const errorMsg = errorData?.message || errorData?.Message || errorData?.mensaje || errorData?.Mensaje || 'Error al validar boleto';
       
-      // Determinar tipo de error
-      if (errorMsg.toLowerCase().includes('ya fue validado') || 
-          errorMsg.toLowerCase().includes('repetido') ||
-          errorMsg.toLowerCase().includes('duplicado')) {
+      console.log('💬 Mensaje de error extraído:', errorMsg);
+      
+      // Determinar tipo de error por color:
+      // AMARILLO: Ya fue validado/usado anteriormente
+      // ROJO: No existe o no pertenece al viaje
+      const errLower = errorMsg.toLowerCase();
+      
+      if (errLower.includes('ya fue validado') || 
+          errLower.includes('ya validado') ||
+          errLower.includes('repetido') ||
+          errLower.includes('duplicado') ||
+          errLower.includes('ya registrad')) {
+        console.log('⚠️ Tipo de error: YA VALIDADO - Color AMARILLO');
         showNotification('warning', errorMsg);
-      } else if (errorMsg.toLowerCase().includes('no pertenece') ||
-                 errorMsg.toLowerCase().includes('no corresponde') ||
-                 errorMsg.toLowerCase().includes('no reconoce')) {
+      } else if (errLower.includes('no pertenece') ||
+                 errLower.includes('no corresponde') ||
+                 errLower.includes('no encontrado') ||
+                 errLower.includes('no existe') ||
+                 errLower.includes('no reconoce') ||
+                 errLower.includes('invalido') ||
+                 errLower.includes('inválido')) {
+        console.log('🔴 Tipo de error: NO EXISTE/NO PERTENECE - Color ROJO');
         showNotification('error', errorMsg);
       } else {
+        // Por defecto, errores generales en ROJO
+        console.log('🔴 Tipo de error: GENERAL - Color ROJO');
         showNotification('error', errorMsg);
       }
+      
+      console.log('═══════════════════════════════════════\n');
     } finally {
       // Permitir nuevo escaneo después de 2 segundos
       setTimeout(() => setScanned(false), 2000);
