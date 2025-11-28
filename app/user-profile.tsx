@@ -3,26 +3,16 @@ import { Platform, TouchableOpacity } from "react-native";
 import { View, Text, ScrollView } from "react-native";
 import { VStack } from "@/components/ui/vstack";
 import { HStack } from "@/components/ui/hstack";
-import { Avatar, AvatarFallbackText } from "@/components/ui/avatar";
-import { Button, ButtonText } from "@/components/ui/button";
-import { Input, InputField } from "@/components/ui/input";
-import {
-  Modal,
-  ModalBackdrop,
-  ModalContent,
-  ModalHeader,
-  ModalCloseButton,
-  ModalBody,
-  ModalFooter,
-} from "@/components/ui/modal";
+import { Avatar, AvatarFallbackText, AvatarImage } from "@/components/ui/avatar";
 import { Heading } from "@/components/ui/heading";
-import { Icon, CloseIcon } from "@/components/ui/icon";
+import { Button, ButtonText } from "@/components/ui/button";
 import Seo from "@/components/helpers/Seo";
 import { useSession } from "@/context/AuthContext";
 import { useRouter } from "expo-router";
 import { useState, useEffect } from "react";
 import {
   apiGetMiPerfil,
+  apiUpdateMiPerfil,
   PerfilUsuario,
 } from "@/services/perfil/perfil.service";
 import LoadingScreen from "@/components/compra/LoadingScreen";
@@ -30,6 +20,9 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouteAccess } from "@/hooks/useRouteAccess";
 import NotFoundScreen from "./+not-found";
+import EditProfileModal from "@/components/user-profile/EditProfileModal";
+import { ProfileFormData } from "@/components/user-profile/hooks/useProfileValidation";
+import { useToastManager } from "@/components/toast/hooks/useToastManager";
 
 export default function UserProfile() {
   const { user, signOut, isLoading } = useSession();
@@ -47,7 +40,7 @@ export default function UserProfile() {
   const [showEditModal, setShowEditModal] = useState(false);
 
   // Form state for editing
-  const [editForm, setEditForm] = useState({
+  const [editForm, setEditForm] = useState<ProfileFormData>({
     nombreCompleto: "",
     telefono: "",
     direccion: "",
@@ -56,21 +49,23 @@ export default function UserProfile() {
     codigoPostal: "",
   });
 
+  const { showToast } = useToastManager();
+
   const fetchPerfil = async () => {
     try {
       setLoading(true);
       setError(null);
       const response = await apiGetMiPerfil();
-      if (response.success) {
+      if (response.success && response.data) {
         setPerfil(response.data);
         // Initialize edit form with current data
         setEditForm({
-          nombreCompleto: response.data.nombreCompleto || "",
-          telefono: response.data.telefono || "",
-          direccion: response.data.direccion || "",
-          ciudad: response.data.ciudad || "",
-          estado: response.data.estado || "",
-          codigoPostal: response.data.codigoPostal || "",
+          nombreCompleto: response.data?.nombreCompleto || "",
+          telefono: response.data?.telefono || "",
+          direccion: response.data?.direccion || "",
+          ciudad: response.data?.ciudad || "",
+          estado: response.data?.estado || "",
+          codigoPostal: response.data?.codigoPostal || "",
         });
       } else {
         setError("Error al obtener el perfil");
@@ -87,11 +82,27 @@ export default function UserProfile() {
   }, []);
 
   const handleSaveProfile = async () => {
-    // TODO: Implement API call to update profile
-    console.log("Saving profile:", editForm);
-    setShowEditModal(false);
-    // After successful save, refresh profile
-    // await fetchPerfil();
+    const dto = {
+      nombreCompleto: editForm.nombreCompleto,
+      telefono: editForm.telefono,
+      direccion: editForm.direccion,
+      ciudad: editForm.ciudad,
+      estado: editForm.estado,
+      codigoPostal: editForm.codigoPostal,
+      notificacionesPush: perfil?.notificacionesPush || false,
+      notificacionesEmail: perfil?.notificacionesEmail || false,
+    };
+    const response = await apiUpdateMiPerfil(dto);
+    if (!response) {
+      throw new Error('Error en la respuesta del servidor');
+    }
+    if (!response.success) {
+      throw new Error(response.message || 'Error al actualizar el perfil');
+    }
+  };
+
+  const handleFormChange = (field: keyof ProfileFormData, value: string) => {
+    setEditForm({ ...editForm, [field]: value });
   };
 
   const userName = perfil
@@ -112,16 +123,23 @@ export default function UserProfile() {
 
       <Seo
         title="Perfil de Usuario"
-        description="Ve y edita tu perfil en BusTix."
+        description="Edita tu perfil de usuario"
       />
 
       {loading ? (
         <LoadingScreen message="Cargando tu perfil..." />
       ) : error ? (
-        <View className="flex-1 justify-center items-center p-4">
-          <Text className="text-red-500 text-center mb-4">{error}</Text>
-          <Text className="text-center">Inténtalo de nuevo más tarde.</Text>
-        </View>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 24 }}>
+          <VStack space="lg" className="items-center">
+            <Heading size="xl" className="text-center text-red-600 mx-8">
+              Error
+            </Heading>
+            <Text className="text-center text-gray-600">{error}</Text>
+            <Button onPress={fetchPerfil} size="md" action="positive">
+              <ButtonText>Reintentar</ButtonText>
+            </Button>
+          </VStack>
+        </ScrollView>
       ) : !perfil ? (
         <View className="flex-1 justify-center items-center">
           <Text>No se encontró información del perfil.</Text>
@@ -139,7 +157,7 @@ export default function UserProfile() {
             >
               <HStack style={{ justifyContent: "center", alignItems: "center", marginBottom: 5 }}>
                 <Avatar size="2xl" style={{ marginRight: 8}}>
-                  <AvatarFallbackText>{userName}</AvatarFallbackText>
+                  {perfil?.urlFotoPerfil ? <AvatarImage source={{ uri: perfil.urlFotoPerfil }} /> : <AvatarFallbackText>{userName}</AvatarFallbackText>}
                 </Avatar>
                 <TouchableOpacity onPress={() => setShowEditModal(true)}>
                   <MaterialIcons name="edit" size={24} color="#00A76F" />
@@ -175,7 +193,7 @@ export default function UserProfile() {
                   style={{ marginRight: 12 }}
                 />
                 <Text style={{ fontSize: 15, color: "#000" }}>
-                  {perfil.telefono || "No especificado"}
+                  <Text style={{ fontWeight: "bold" }}>Telefono:</Text> {perfil.telefono || "No especificado"}
                 </Text>
               </HStack>
               <HStack style={{ alignItems: "center" }}>
@@ -186,7 +204,133 @@ export default function UserProfile() {
                   style={{ marginRight: 12 }}
                 />
                 <Text style={{ fontSize: 15, color: "#000" }}>
-                  {perfil.email}
+                  <Text style={{ fontWeight: "bold" }}>Correo:</Text> {perfil.email || "No especificado"}
+                </Text>
+              </HStack>
+            </View>
+
+            {/* Personal Information */}
+            <View
+              style={{ backgroundColor: "white", marginTop: 2, padding: 20 }}
+            >
+              <Heading size="sm" style={{ marginBottom: 16, color: "#000" }}>
+                Información Personal
+              </Heading>
+              <HStack style={{ alignItems: "center", marginBottom: 16 }}>
+                <MaterialIcons
+                  name="badge"
+                  size={20}
+                  color="#00A76F"
+                  style={{ marginRight: 12 }}
+                />
+                <Text style={{ fontSize: 15, color: "#000" }}>
+                  <Text style={{ fontWeight: "bold" }}>Tipo Documento:</Text> {perfil.tipoDocumento || "No especificado"}
+                </Text>
+              </HStack>
+              <HStack style={{ alignItems: "center", marginBottom: 16 }}>
+                <MaterialIcons
+                  name="credit-card"
+                  size={20}
+                  color="#00A76F"
+                  style={{ marginRight: 12 }}
+                />
+                <Text style={{ fontSize: 15, color: "#000" }}>
+                  <Text style={{ fontWeight: "bold" }}>Número Documento:</Text> {perfil.numeroDocumento || "No especificado"}
+                </Text>
+              </HStack>
+              <HStack style={{ alignItems: "center" }}>
+                <MaterialIcons
+                  name="cake"
+                  size={20}
+                  color="#00A76F"
+                  style={{ marginRight: 12 }}
+                />
+                <Text style={{ fontSize: 15, color: "#000" }}>
+                  <Text style={{ fontWeight: "bold" }}>Fecha Nacimiento:</Text> {perfil.fechaNacimiento ? new Date(perfil.fechaNacimiento).toLocaleDateString() : "No especificada"}
+                </Text>
+              </HStack>
+            </View>
+
+            {/* Address Information */}
+            <View
+              style={{ backgroundColor: "white", marginTop: 2, padding: 20 }}
+            >
+              <Heading size="sm" style={{ marginBottom: 16, color: "#000" }}>
+                Dirección
+              </Heading>
+              <HStack style={{ alignItems: "center", marginBottom: 16 }}>
+                <MaterialIcons
+                  name="location-on"
+                  size={20}
+                  color="#00A76F"
+                  style={{ marginRight: 12 }}
+                />
+                <Text style={{ fontSize: 15, color: "#000" }}>
+                  <Text style={{ fontWeight: "bold" }}>Direccion:</Text> {perfil.direccion || "No especificada"}
+                </Text>
+              </HStack>
+              <HStack style={{ alignItems: "center", marginBottom: 16 }}>
+                <MaterialIcons
+                  name="location-city"
+                  size={20}
+                  color="#00A76F"
+                  style={{ marginRight: 12 }}
+                />
+                <Text style={{ fontSize: 15, color: "#000" }}>
+                  <Text style={{ fontWeight: "bold" }}>Ciudad:</Text> {perfil.ciudad || "No especificada"}
+                </Text>
+              </HStack>
+              <HStack style={{ alignItems: "center", marginBottom: 16 }}>
+                <MaterialIcons
+                  name="map"
+                  size={20}
+                  color="#00A76F"
+                  style={{ marginRight: 12 }}
+                />
+                <Text style={{ fontSize: 15, color: "#000" }}>
+                  <Text style={{ fontWeight: "bold" }}>Estado:</Text> {perfil.estado || "No especificado"}
+                </Text>
+              </HStack>
+              <HStack style={{ alignItems: "center" }}>
+                <MaterialIcons
+                  name="markunread-mailbox"
+                  size={20}
+                  color="#00A76F"
+                  style={{ marginRight: 12 }}
+                />
+                <Text style={{ fontSize: 15, color: "#000" }}>
+                  <Text style={{ fontWeight: "bold" }}>Código Postal:</Text> {perfil.codigoPostal || "No especificado"}
+                </Text>
+              </HStack>
+            </View>
+
+            {/* Preferences */}
+            <View
+              style={{ backgroundColor: "white", marginTop: 2, padding: 20 }}
+            >
+              <Heading size="sm" style={{ marginBottom: 16, color: "#000" }}>
+                Preferencias
+              </Heading>
+              <HStack style={{ alignItems: "center", marginBottom: 16 }}>
+                <MaterialIcons
+                  name="notifications"
+                  size={20}
+                  color="#00A76F"
+                  style={{ marginRight: 12 }}
+                />
+                <Text style={{ fontSize: 15, color: "#000" }}>
+                  <Text style={{ fontWeight: "bold" }}>Notificaciones Push:</Text> {perfil.notificacionesPush ? "Sí" : "No"}
+                </Text>
+              </HStack>
+              <HStack style={{ alignItems: "center" }}>
+                <MaterialIcons
+                  name="email"
+                  size={20}
+                  color="#00A76F"
+                  style={{ marginRight: 12 }}
+                />
+                <Text style={{ fontSize: 15, color: "#000" }}>
+                  <Text style={{ fontWeight: "bold" }}>Notificaciones Email:</Text> {perfil.notificacionesEmail ? "Sí" : "No"}
                 </Text>
               </HStack>
             </View>
@@ -341,148 +485,18 @@ export default function UserProfile() {
         </ScrollView>
       )}
 
-      {/* Edit Profile Modal */}
-      <Modal
+      <EditProfileModal
         isOpen={showEditModal}
         onClose={() => setShowEditModal(false)}
-        size="lg"
-      >
-        <ModalBackdrop />
-        <ModalContent>
-          <ModalHeader>
-            <Heading size="md">Editar Perfil</Heading>
-            <ModalCloseButton>
-              <Icon as={CloseIcon} />
-            </ModalCloseButton>
-          </ModalHeader>
-          <ModalBody>
-            <ScrollView>
-              <VStack space="md">
-                <VStack space="xs">
-                  <Text
-                    style={{ fontSize: 14, fontWeight: "600", color: "#000" }}
-                  >
-                    Nombre Completo
-                  </Text>
-                  <Input>
-                    <InputField
-                      value={editForm.nombreCompleto}
-                      onChangeText={(text) =>
-                        setEditForm({ ...editForm, nombreCompleto: text })
-                      }
-                      placeholder="Ingresa tu nombre completo"
-                    />
-                  </Input>
-                </VStack>
-
-                <VStack space="xs">
-                  <Text
-                    style={{ fontSize: 14, fontWeight: "600", color: "#000" }}
-                  >
-                    Teléfono
-                  </Text>
-                  <Input>
-                    <InputField
-                      value={editForm.telefono}
-                      onChangeText={(text) =>
-                        setEditForm({ ...editForm, telefono: text })
-                      }
-                      placeholder="Ingresa tu teléfono"
-                      keyboardType="phone-pad"
-                    />
-                  </Input>
-                </VStack>
-
-                <VStack space="xs">
-                  <Text
-                    style={{ fontSize: 14, fontWeight: "600", color: "#000" }}
-                  >
-                    Dirección
-                  </Text>
-                  <Input>
-                    <InputField
-                      value={editForm.direccion}
-                      onChangeText={(text) =>
-                        setEditForm({ ...editForm, direccion: text })
-                      }
-                      placeholder="Ingresa tu dirección"
-                    />
-                  </Input>
-                </VStack>
-
-                <VStack space="xs">
-                  <Text
-                    style={{ fontSize: 14, fontWeight: "600", color: "#000" }}
-                  >
-                    Ciudad
-                  </Text>
-                  <Input>
-                    <InputField
-                      value={editForm.ciudad}
-                      onChangeText={(text) =>
-                        setEditForm({ ...editForm, ciudad: text })
-                      }
-                      placeholder="Ingresa tu ciudad"
-                    />
-                  </Input>
-                </VStack>
-
-                <VStack space="xs">
-                  <Text
-                    style={{ fontSize: 14, fontWeight: "600", color: "#000" }}
-                  >
-                    Estado
-                  </Text>
-                  <Input>
-                    <InputField
-                      value={editForm.estado}
-                      onChangeText={(text) =>
-                        setEditForm({ ...editForm, estado: text })
-                      }
-                      placeholder="Ingresa tu estado"
-                    />
-                  </Input>
-                </VStack>
-
-                <VStack space="xs">
-                  <Text
-                    style={{ fontSize: 14, fontWeight: "600", color: "#000" }}
-                  >
-                    Código Postal
-                  </Text>
-                  <Input>
-                    <InputField
-                      value={editForm.codigoPostal}
-                      onChangeText={(text) =>
-                        setEditForm({ ...editForm, codigoPostal: text })
-                      }
-                      placeholder="Ingresa tu código postal"
-                      keyboardType="numeric"
-                    />
-                  </Input>
-                </VStack>
-              </VStack>
-            </ScrollView>
-          </ModalBody>
-          <ModalFooter>
-            <HStack space="md" style={{ width: "100%" }}>
-              <Button
-                variant="outline"
-                onPress={() => setShowEditModal(false)}
-                style={{ flex: 1 }}
-              >
-                <ButtonText>Cancelar</ButtonText>
-              </Button>
-              <Button
-                onPress={handleSaveProfile}
-                style={{ flex: 1, backgroundColor: "#000" }}
-              >
-                <ButtonText>Guardar</ButtonText>
-              </Button>
-            </HStack>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+        formData={editForm}
+        onChange={handleFormChange}
+        onSave={handleSaveProfile}
+        onSuccess={() => {
+          showToast({ type: 'success', title: 'Éxito', description: 'Perfil actualizado exitosamente' });
+          setShowEditModal(false);
+          fetchPerfil();
+        }}
+      />
     </>
   );
 }
