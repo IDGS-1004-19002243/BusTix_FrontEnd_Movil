@@ -146,7 +146,7 @@ export default function UserProfile() {
         </View>
       ) : (
         <ScrollView style={{ flex: 1, backgroundColor: "#f8f9fa" }}>
-          <VStack >
+          <VStack style={{marginBottom: insets.bottom}} >
             {/* Profile Header */}
             <View
               style={{

@@ -1,10 +1,9 @@
 import {
   Home,
-  User,
-  Settings,
   Calendar,
   Ticket,
   MessageCircle,
+  Bus,
 } from 'lucide-react-native';
 import { MenuSection } from '@/types/sidebar.types';
 
@@ -43,6 +42,14 @@ export const menuSections: MenuSection[] = [
         color: '#8B5CF6', 
         bgColor: '#EDE9FE',
         route: '/(pages)/chat'
+      },
+      { 
+        icon: Bus, 
+        label: 'Mis Viajes', 
+        active: false, 
+        color: '#EF4444', 
+        bgColor: '#FEE2E2',
+        route: '/(pages)/mis-viajes'
       },
     ]
   },

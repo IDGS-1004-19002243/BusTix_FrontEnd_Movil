@@ -45,7 +45,7 @@ const Notifications = () => {
 
   // Hook de polling inteligente
   const { refreshNow } = useNotificationsPolling({
-    interval: 30000, // 30 segundos
+    interval: 10000, // 10 segundos
     enabled: true,
     onUnreadCountChange: handleUnreadCountChange
   });
@@ -56,10 +56,7 @@ const Notifications = () => {
     }
   }, [showDrawer]);
 
-  const fetchUnreadCount = async () => {
-    // Esta función ahora delega al hook de polling
-    refreshNow();
-  };
+
 
   const fetchNotifications = async () => {
     setLoading(true);
