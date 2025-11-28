@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, Platform, useWindowDimensions, Dimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Bell, Check, Trash2 } from 'lucide-react-native';
@@ -21,7 +21,9 @@ import { Heading } from '@/components/ui/heading';
 import { Icon, CloseIcon } from '@/components/ui/icon';
 import { Card } from '@/components/ui/card';
 import LoadingScreen from '@/components/compra/LoadingScreen';
+import { Spinner } from '@/components/ui/spinner';
 import { Notificacion, apiGetMisNotificaciones, apiMarcarNotificacionLeida, apiEliminarNotificacion, apiMarcarTodasLeidas, apiGetCountNoLeidas } from '@/services/notificaciones/notificaciones.service';
+import { useNotificationsPolling } from '@/hooks/useNotificationsPolling';
 
 const Notifications = () => {
   const [showDrawer, setShowDrawer] = useState(false);
@@ -29,28 +31,34 @@ const Notifications = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [markingAsRead, setMarkingAsRead] = useState<Set<number>>(new Set());
+  const [deleting, setDeleting] = useState<Set<number>>(new Set());
+  const [loadingMarkAll, setLoadingMarkAll] = useState(false);
+  const [loadingDeleteAll, setLoadingDeleteAll] = useState(false);
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
 
-  useEffect(() => {
-    fetchUnreadCount();
+  // Callback para actualizar el contador de notificaciones no leídas
+  const handleUnreadCountChange = useCallback((count: number) => {
+    setUnreadCount(count);
   }, []);
 
+  // Hook de polling inteligente
+  const { refreshNow } = useNotificationsPolling({
+    interval: 30000, // 30 segundos
+    enabled: true,
+    onUnreadCountChange: handleUnreadCountChange
+  });
+
   useEffect(() => {
-    if (showDrawer && notificationsList.length === 0) {
+    if (showDrawer) {
       fetchNotifications();
     }
   }, [showDrawer]);
 
   const fetchUnreadCount = async () => {
-    try {
-      const response = await apiGetCountNoLeidas();
-      if (response.success) {
-        setUnreadCount(response.count);
-      }
-    } catch (err: any) {
-      console.error('Error fetching unread count:', err);
-    }
+    // Esta función ahora delega al hook de polling
+    refreshNow();
   };
 
   const fetchNotifications = async () => {
@@ -87,46 +95,93 @@ const Notifications = () => {
   };
 
   const handleMarkAsRead = async (id: number) => {
+    setMarkingAsRead(prev => new Set(prev).add(id));
     try {
       const response = await apiMarcarNotificacionLeida(id);
       if (response.success) {
         setNotificationsList(prev => prev.map(n => n.notificacionID === id ? { ...n, fueLeida: true, fechaLectura: response.fechaLectura || null } : n));
         setUnreadCount(prev => Math.max(0, prev - 1));
+        // Sincronizar con el servidor después del cambio local
+        setTimeout(() => refreshNow(), 500);
       }
     } catch (err) {
       console.error('Error marking as read:', err);
+    } finally {
+      setMarkingAsRead(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(id);
+        return newSet;
+      });
     }
   };
 
   const handleDelete = async (id: number) => {
+    setDeleting(prev => new Set(prev).add(id));
     try {
       const response = await apiEliminarNotificacion(id);
       if (response.success) {
         const wasUnread = notificationsList.find(n => n.notificacionID === id)?.fueLeida === false;
         setNotificationsList(prev => prev.filter(n => n.notificacionID !== id));
         if (wasUnread) setUnreadCount(prev => Math.max(0, prev - 1));
+        // Sincronizar con el servidor después del cambio local
+        setTimeout(() => refreshNow(), 500);
       }
-    } catch (err) {
-      console.error('Error deleting:', err);
+    } catch (err: any) {
+      // If 404, notification not found, still remove from list
+      if (err.statusCode === 404) {
+        const wasUnread = notificationsList.find(n => n.notificacionID === id)?.fueLeida === false;
+        setNotificationsList(prev => prev.filter(n => n.notificacionID !== id));
+        if (wasUnread) setUnreadCount(prev => Math.max(0, prev - 1));
+        // Sincronizar con el servidor después del cambio local
+        setTimeout(() => refreshNow(), 500);
+      } else {
+        console.error('Error deleting:', err);
+      }
+    } finally {
+      setDeleting(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(id);
+        return newSet;
+      });
     }
   };
 
   const handleMarkAllAsRead = async () => {
+    setLoadingMarkAll(true);
     try {
       const response = await apiMarcarTodasLeidas();
       if (response.success) {
         setNotificationsList(prev => prev.map(n => ({ ...n, fueLeida: true, fechaLectura: new Date().toISOString() })));
         setUnreadCount(0);
+        // Sincronizar con el servidor después del cambio local
+        setTimeout(() => refreshNow(), 500);
       }
     } catch (err) {
       console.error('Error marking all as read:', err);
+    } finally {
+      setLoadingMarkAll(false);
     }
   };
 
-  const handleDeleteAll = () => {
-    const deletedUnread = notificationsList.filter(n => !n.fueLeida).length;
-    setNotificationsList([]);
-    setUnreadCount(prev => Math.max(0, prev - deletedUnread));
+  const handleDeleteAll = async () => {
+    setLoadingDeleteAll(true);
+    const ids = notificationsList.map(n => n.notificacionID);
+    try {
+      await Promise.all(ids.map(id => apiEliminarNotificacion(id)));
+      setNotificationsList([]);
+      setUnreadCount(0);
+      // Sincronizar con el servidor después del cambio local
+      setTimeout(() => refreshNow(), 500);
+    } catch (err) {
+      console.error('Error deleting all:', err);
+      // Still clear local list even if some deletes failed
+      setNotificationsList([]);
+      setUnreadCount(0);
+      // Sincronizar con el servidor después del cambio local
+      setTimeout(() => refreshNow(), 500);
+    } finally {
+      setLoadingDeleteAll(false);
+    }
   };
 
   return (
@@ -206,8 +261,13 @@ const Notifications = () => {
                             variant="outline"
                             action="positive"
                             onPress={() => handleMarkAsRead(notification.notificacionID)}
+                            disabled={markingAsRead.has(notification.notificacionID)}
                           >
-                            <ButtonIcon as={Check} size="xs" />
+                            {markingAsRead.has(notification.notificacionID) ? (
+                              <Spinner size="small" color="green" />
+                            ) : (
+                              <Icon as={Check} size="xs" color="#00A76F" />
+                            )}
                           </Button>
                         )}
                         <Button
@@ -215,8 +275,13 @@ const Notifications = () => {
                           variant="outline"
                           action="negative"
                           onPress={() => handleDelete(notification.notificacionID)}
+                          disabled={deleting.has(notification.notificacionID)}
                         >
-                          <ButtonIcon as={Trash2} size="xs" />
+                          {deleting.has(notification.notificacionID) ? (
+                            <Spinner size="small" color="red" />
+                          ) : (
+                            <Icon as={Trash2} size="xs" color="#ff3b30" />
+                          )}
                         </Button>
                       </View>
                     </Card>
@@ -233,10 +298,15 @@ const Notifications = () => {
                   variant="outline"
                   action="positive"
                   onPress={handleMarkAllAsRead}
+                  disabled={loadingMarkAll}
                   style={{ flex: 0.6 }}
                 >
-                  <ButtonIcon as={Check} size="sm" />
-                  <ButtonText>Marcar todo</ButtonText>
+                  {loadingMarkAll ? (
+                    <Spinner size="small" color="green" />
+                  ) : (
+                    <ButtonIcon as={Check} size="sm" color="#00A76F" />
+                  )}
+                  {!loadingMarkAll && <ButtonText>Marcar todo</ButtonText>}
                 </Button>
               )}
               {notificationsList.length > 0 && (
@@ -245,10 +315,15 @@ const Notifications = () => {
                   size="sm"
                   action="negative"
                   onPress={handleDeleteAll}
+                  disabled={loadingDeleteAll}
                   style={unreadCount > 0 ? { flex: 0.4 } : { flex: 1 }}
                 >
-                  <ButtonIcon as={Trash2} size="sm" />
-                  <ButtonText>Borrar todo</ButtonText>
+                  {loadingDeleteAll ? (
+                    <Spinner size="small" color="red" />
+                  ) : (
+                    <ButtonIcon as={Trash2} size="sm" color="#ff3b30" />
+                  )}
+                  {!loadingDeleteAll && <ButtonText>Borrar todo</ButtonText>}
                 </Button>
               )}
             </HStack>
