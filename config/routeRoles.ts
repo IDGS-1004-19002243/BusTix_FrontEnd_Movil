@@ -3,4 +3,5 @@ export const routeRoles: Record<string, string[]> = {
   '/eventos': [],
   '/mis-boletos': ['User'],
   '/user-profile': ['User'],
+  '/chat': [],
 };
