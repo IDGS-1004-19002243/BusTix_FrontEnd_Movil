@@ -12,6 +12,7 @@ import { useRouteAccess } from '@/hooks/useRouteAccess';
 import NotFoundScreen from '../+not-found';
 import { AppleMaps, GoogleMaps } from 'expo-maps';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { MapPin } from 'lucide-react-native';
 
 export default function RutaDetailScreen() {
     const { codigoViaje } = useLocalSearchParams<{ codigoViaje: string }>();
@@ -26,30 +27,37 @@ export default function RutaDetailScreen() {
     const { allowed, requiresRole } = useRouteAccess("/ruta");
     const blocked = !sessionLoading && requiresRole && !allowed;
 
+    // Create the custom icon using a local image (Lucide MapPin style)
+    // NOTE: You need to create parada_pin.png in assets/ folder with a MapPin-style icon
+    const paradaPinIcon = require('@/assets/images/parada_pin.png');
+
+    // Helper to validate and parse coordinates
+    const getCoord = (lat: any, lng: any) => {
+        const latNum = parseFloat(lat);
+        const lngNum = parseFloat(lng);
+        if (!isNaN(latNum) && !isNaN(lngNum)) {
+            return { lat: latNum, lng: lngNum };
+        }
+        return null;
+    };
+
     // Calculate total distance in kilometers
     const totalDistance = useMemo(() => {
         if (!viaje) return null;
 
-        // Helper to validate coordinates
-        const isValidCoord = (lat: any, lng: any) =>
-            typeof lat === 'number' && typeof lng === 'number' && !isNaN(lat) && !isNaN(lng);
-
         // Collect all valid points in order
         const points: { lat: number, lng: number }[] = [];
 
-        if (isValidCoord(viaje.latitudOrigen, viaje.longitudOrigen)) {
-            points.push({ lat: viaje.latitudOrigen, lng: viaje.longitudOrigen });
-        }
+        const origin = getCoord(viaje.latitudOrigen, viaje.longitudOrigen);
+        if (origin) points.push(origin);
 
         viaje.paradas.forEach(p => {
-            if (isValidCoord(p.latitud, p.longitud)) {
-                points.push({ lat: p.latitud, lng: p.longitud });
-            }
+            const stop = getCoord(p.latitud, p.longitud);
+            if (stop) points.push(stop);
         });
 
-        if (isValidCoord(viaje.latitudDestino, viaje.longitudDestino)) {
-            points.push({ lat: viaje.latitudDestino, lng: viaje.longitudDestino });
-        }
+        const dest = getCoord(viaje.latitudDestino, viaje.longitudDestino);
+        if (dest) points.push(dest);
 
         if (points.length < 2) return null;
 
@@ -83,25 +91,18 @@ export default function RutaDetailScreen() {
     const cameraPosition = useMemo(() => {
         if (!viaje) return undefined;
 
-        // Helper to validate coordinates
-        const isValidCoord = (lat: any, lng: any) =>
-            typeof lat === 'number' && typeof lng === 'number' && !isNaN(lat) && !isNaN(lng);
-
         const allCoords: { latitude: number, longitude: number }[] = [];
 
-        if (isValidCoord(viaje.latitudOrigen, viaje.longitudOrigen)) {
-            allCoords.push({ latitude: viaje.latitudOrigen, longitude: viaje.longitudOrigen });
-        }
+        const origin = getCoord(viaje.latitudOrigen, viaje.longitudOrigen);
+        if (origin) allCoords.push({ latitude: origin.lat, longitude: origin.lng });
 
         viaje.paradas.forEach(p => {
-            if (isValidCoord(p.latitud, p.longitud)) {
-                allCoords.push({ latitude: p.latitud, longitude: p.longitud });
-            }
+            const stop = getCoord(p.latitud, p.longitud);
+            if (stop) allCoords.push({ latitude: stop.lat, longitude: stop.lng });
         });
 
-        if (isValidCoord(viaje.latitudDestino, viaje.longitudDestino)) {
-            allCoords.push({ latitude: viaje.latitudDestino, longitude: viaje.longitudDestino });
-        }
+        const dest = getCoord(viaje.latitudDestino, viaje.longitudDestino);
+        if (dest) allCoords.push({ latitude: dest.lat, longitude: dest.lng });
 
         if (allCoords.length === 0) return undefined;
 
@@ -170,65 +171,105 @@ export default function RutaDetailScreen() {
         }
     }, [codigoViaje, user]);
 
-    // Helper to get valid markers
-    const getMarkers = () => {
+    // Helper to get valid markers for Apple Maps
+    const getAppleMarkers = () => {
         if (!viaje) return [];
         const markers = [];
-        const isValidCoord = (lat: any, lng: any) =>
-            typeof lat === 'number' && typeof lng === 'number' && !isNaN(lat) && !isNaN(lng);
 
-        if (isValidCoord(viaje.latitudOrigen, viaje.longitudOrigen)) {
+        const origin = getCoord(viaje.latitudOrigen, viaje.longitudOrigen);
+        if (origin) {
             markers.push({
                 id: 'origen',
-                coordinate: { latitude: viaje.latitudOrigen, longitude: viaje.longitudOrigen },
+                coordinate: { latitude: origin.lat, longitude: origin.lng },
                 title: viaje.ciudadOrigen,
-                description: `Salida: ${new Date(viaje.fechaSalida).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}`,
-                snippet: `Salida: ${new Date(viaje.fechaSalida).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}`
+                description: `Salida: ${new Date(viaje.fechaSalida).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}`
             });
         }
 
         viaje.paradas.forEach(parada => {
-            if (isValidCoord(parada.latitud, parada.longitud)) {
+            const stop = getCoord(parada.latitud, parada.longitud);
+            if (stop) {
                 markers.push({
                     id: `parada-${parada.paradaViajeID}`,
-                    coordinate: { latitude: parada.latitud, longitude: parada.longitud },
+                    coordinate: { latitude: stop.lat, longitude: stop.lng },
                     title: parada.nombreParada,
-                    description: parada.horaEstimadaLlegada ? `Llegada: ${new Date(parada.horaEstimadaLlegada).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}` : '',
-                    snippet: parada.horaEstimadaLlegada ? `Llegada: ${new Date(parada.horaEstimadaLlegada).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}` : ''
+                    description: parada.horaEstimadaLlegada ? `Llegada: ${new Date(parada.horaEstimadaLlegada).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}` : `Parada ${parada.ordenParada}`
                 });
             }
         });
 
-        if (isValidCoord(viaje.latitudDestino, viaje.longitudDestino)) {
+        const dest = getCoord(viaje.latitudDestino, viaje.longitudDestino);
+        if (dest) {
             markers.push({
                 id: 'destino',
-                coordinate: { latitude: viaje.latitudDestino, longitude: viaje.longitudDestino },
+                coordinate: { latitude: dest.lat, longitude: dest.lng },
                 title: viaje.ciudadDestino,
-                description: `Llegada: ${new Date(viaje.fechaLlegadaEstimada).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}`,
+                description: `Llegada: ${new Date(viaje.fechaLlegadaEstimada).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}`
+            });
+        }
+
+        return markers;
+    };
+
+    // Helper to get valid markers for Google Maps
+    const getGoogleMarkers = () => {
+        if (!viaje) return [];
+        const markers = [];
+
+        const origin = getCoord(viaje.latitudOrigen, viaje.longitudOrigen);
+        if (origin) {
+            markers.push({
+                id: 'origen',
+                coordinate: { latitude: origin.lat, longitude: origin.lng },
+                title: viaje.ciudadOrigen,
+                snippet: `Salida: ${new Date(viaje.fechaSalida).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}`,
+                icon: paradaPinIcon // Custom icon for stops
+            });
+        }
+
+        viaje.paradas.forEach(parada => {
+            const stop = getCoord(parada.latitud, parada.longitud);
+            if (stop) {
+                markers.push({
+                    id: `parada-${parada.paradaViajeID}`,
+                    coordinate: { latitude: stop.lat, longitude: stop.lng },
+                    title: parada.nombreParada,
+                    snippet: parada.horaEstimadaLlegada ? `Llegada: ${new Date(parada.horaEstimadaLlegada).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}` : `Parada ${parada.ordenParada}`,
+                    // icon: paradaPinIcon // Custom icon for stops - uncomment when parada_pin.png exists
+                });
+            }
+        });
+
+        const dest = getCoord(viaje.latitudDestino, viaje.longitudDestino);
+        if (dest) {
+            markers.push({
+                id: 'destino',
+                coordinate: { latitude: dest.lat, longitude: dest.lng },
+                title: viaje.ciudadDestino,
                 snippet: `Llegada: ${new Date(viaje.fechaLlegadaEstimada).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}`
             });
         }
+
         return markers;
     };
+
 
     // Helper for polyline coords
     const getPolylineCoords = () => {
         if (!viaje) return [];
         const coords = [];
-        const isValidCoord = (lat: any, lng: any) =>
-            typeof lat === 'number' && typeof lng === 'number' && !isNaN(lat) && !isNaN(lng);
 
-        if (isValidCoord(viaje.latitudOrigen, viaje.longitudOrigen)) {
-            coords.push({ latitude: viaje.latitudOrigen, longitude: viaje.longitudOrigen });
-        }
+        const origin = getCoord(viaje.latitudOrigen, viaje.longitudOrigen);
+        if (origin) coords.push({ latitude: origin.lat, longitude: origin.lng });
+
         viaje.paradas.forEach(p => {
-            if (isValidCoord(p.latitud, p.longitud)) {
-                coords.push({ latitude: p.latitud, longitude: p.longitud });
-            }
+            const stop = getCoord(p.latitud, p.longitud);
+            if (stop) coords.push({ latitude: stop.lat, longitude: stop.lng });
         });
-        if (isValidCoord(viaje.latitudDestino, viaje.longitudDestino)) {
-            coords.push({ latitude: viaje.latitudDestino, longitude: viaje.longitudDestino });
-        }
+
+        const dest = getCoord(viaje.latitudDestino, viaje.longitudDestino);
+        if (dest) coords.push({ latitude: dest.lat, longitude: dest.lng });
+
         return coords;
     };
 
@@ -281,12 +322,11 @@ export default function RutaDetailScreen() {
                     </ScrollView>
                 ) : (
                     <View style={{ flex: 1, backgroundColor: "white", marginBottom: insets.bottom }}>
-                        {/* Distance Overlay */}
+                        {/* Route Overlay */}
                         <View style={styles.overlayContainer}>
                             <View style={styles.arrivalCard}>
-                                <Text style={styles.arrivalLabel}>Distancia Total</Text>
-                                <Text style={styles.arrivalTime}>{totalDistance ? `${totalDistance} km` : 'Calculando...'}</Text>
-                                <Text style={styles.arrivalDestination}>{viaje.ciudadOrigen} → {viaje.ciudadDestino}</Text>
+                                <Text style={styles.arrivalLabel}>Ruta del Viaje</Text>
+                                <Text style={styles.arrivalTime}>{viaje.ciudadOrigen} → {viaje.ciudadDestino}</Text>
                             </View>
                         </View>
 
@@ -295,12 +335,12 @@ export default function RutaDetailScreen() {
                                 <AppleMaps.View
                                     style={{ flex: 1 }}
                                     cameraPosition={cameraPosition}
-                                    markers={getMarkers()}
+                                    markers={getAppleMarkers()}
                                     polylines={[{
                                         id: 'ruta-principal',
                                         coordinates: getPolylineCoords(),
-                                        color: '#22c55e', // Green color
-                                        width: 5
+                                        color: '#0f53ff', // Red color
+                                        width: 10
                                     }]}
                                 />
                             ) : Platform.OS === 'android' ? (
@@ -310,12 +350,12 @@ export default function RutaDetailScreen() {
                                     properties={{
                                         isMyLocationEnabled: false // Explicitly disable to prevent permission crash
                                     }}
-                                    markers={getMarkers()}
+                                    markers={getGoogleMarkers()}
                                     polylines={[{
                                         id: 'ruta-principal',
                                         coordinates: getPolylineCoords(),
-                                        color: '#22c55e', // Green color
-                                        width: 5
+                                        color: '#0f53ff', // Red color
+                                        width: 15
                                     }]}
                                 />
                             ) : (
@@ -351,17 +391,16 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     arrivalLabel: {
-        fontSize: 12,
-        color: '#6b7280',
-        fontWeight: '500',
-        textTransform: 'uppercase',
+        fontSize: 20,
+        color: '#2563eb',
+        fontWeight: 'bold',
         letterSpacing: 0.5,
         marginBottom: 4,
     },
     arrivalTime: {
-        fontSize: 28,
-        fontWeight: 'bold',
-        color: '#2563eb',
+        fontSize: 15,
+        fontWeight: '600',
+        color: '#374151',
         marginBottom: 6,
     },
     arrivalDestination: {
