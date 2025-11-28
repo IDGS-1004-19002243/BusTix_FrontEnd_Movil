@@ -14,7 +14,6 @@ import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { apiGetExactAddress } from '@/services/geoapify';
 import { MaterialIcons } from '@expo/vector-icons';
-import { formatDate } from '@/components/eventos/hooks/useEventos';
 
 const getEstatusBadge = (estatus: string | number) => {
   const statusMap: Record<string | number, { text: string; variant: 'success' | 'error' | 'warning' | 'info' | 'muted' }> = {

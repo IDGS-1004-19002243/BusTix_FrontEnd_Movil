@@ -61,7 +61,11 @@ export interface ViajeDetalleCliente {
   eventoUrlImagen: string;
   rutaNombre: string;
   ciudadOrigen: string;
+  latitudOrigen: number;
+  longitudOrigen: number;
   ciudadDestino: string;
+  latitudDestino: number;
+  longitudDestino: number;
   fechaSalida: string;
   fechaLlegadaEstimada: string;
   duracionEstimadaHoras: number;
