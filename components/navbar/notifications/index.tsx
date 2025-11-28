@@ -105,7 +105,6 @@ const Notifications = () => {
         setTimeout(() => refreshNow(), 500);
       }
     } catch (err) {
-      console.error('Error marking as read:', err);
     } finally {
       setMarkingAsRead(prev => {
         const newSet = new Set(prev);
@@ -135,7 +134,6 @@ const Notifications = () => {
         // Sincronizar con el servidor después del cambio local
         setTimeout(() => refreshNow(), 500);
       } else {
-        console.error('Error deleting:', err);
       }
     } finally {
       setDeleting(prev => {
@@ -157,7 +155,6 @@ const Notifications = () => {
         setTimeout(() => refreshNow(), 500);
       }
     } catch (err) {
-      console.error('Error marking all as read:', err);
     } finally {
       setLoadingMarkAll(false);
     }
@@ -173,8 +170,7 @@ const Notifications = () => {
       // Sincronizar con el servidor después del cambio local
       setTimeout(() => refreshNow(), 500);
     } catch (err) {
-      console.error('Error deleting all:', err);
-      // Still clear local list even if some deletes failed
+          // Still clear local list even if some deletes failed
       setNotificationsList([]);
       setUnreadCount(0);
       // Sincronizar con el servidor después del cambio local

@@ -23,7 +23,6 @@ export const useNotificationsPolling = ({
         onUnreadCountChange(response.count);
       }
     } catch (error) {
-      console.error('Error fetching unread notifications count:', error);
     }
   }, [onUnreadCountChange]);
 
