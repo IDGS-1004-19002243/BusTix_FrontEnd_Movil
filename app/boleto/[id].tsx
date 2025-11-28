@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { ScrollView, TouchableOpacity, Platform, View } from 'react-native';
-import { VStack } from '@/components/ui/vstack';
+import { Badge, BadgeText } from '@/components/ui/badge';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Heading } from '@/components/ui/heading';
 import { Text } from '@/components/ui/text';
 import { HStack } from '@/components/ui/hstack';
+import { VStack } from '@/components/ui/vstack';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { apiGetUserBoletos, EventoUsuario, Transaccion, BoletoUsuario } from '@/services/boletos/boletos.service';
 import LoadingScreen from '@/components/compra/LoadingScreen';
@@ -13,6 +14,29 @@ import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { apiGetExactAddress } from '@/services/geoapify';
 import { MaterialIcons } from '@expo/vector-icons';
+import { formatDate } from '@/components/eventos/hooks/useEventos';
+
+const getEstatusBadge = (estatus: string | number) => {
+  const statusMap: Record<string | number, { text: string; variant: 'success' | 'error' | 'warning' | 'info' | 'muted' }> = {
+    9: { text: 'Pendiente', variant: 'warning' },
+    'BOL_PENDIENTE': { text: 'Pendiente', variant: 'warning' },
+    10: { text: 'Pagado', variant: 'success' },
+    'BOL_PAGADO': { text: 'Pagado', variant: 'success' },
+    11: { text: 'Validado', variant: 'info' },
+    'BOL_VALIDADO': { text: 'Validado', variant: 'info' },
+    12: { text: 'Usado', variant: 'muted' },
+    'BOL_USADO': { text: 'Usado', variant: 'muted' },
+    13: { text: 'Cancelado', variant: 'error' },
+    'BOL_CANCELADO': { text: 'Cancelado', variant: 'error' },
+    14: { text: 'Pendiente', variant: 'warning' },
+    'PAG_PENDIENTE': { text: 'Pendiente', variant: 'warning' },
+    15: { text: 'Capturado', variant: 'success' },
+    'PAG_CAPTURADO': { text: 'Capturado', variant: 'success' },
+    16: { text: 'Rechazado', variant: 'error' },
+    'PAG_RECHAZADO': { text: 'Rechazado', variant: 'error' },
+  };
+  return statusMap[estatus] || { text: estatus.toString(), variant: 'muted' as const };
+};
 
 export default function BoletoQRDetailScreen() {
   const { id: eventoId, transaccion, boleto } = useLocalSearchParams<{ id: string; transaccion: string; boleto: string }>();
@@ -184,7 +208,12 @@ export default function BoletoQRDetailScreen() {
                       {eventName}
                     </Text>
                   </VStack>
-                
+                  
+                  <VStack className="items-center">
+                    <Badge action={getEstatusBadge(boletoData!.estatus).variant} size="lg">
+                      <BadgeText>{getEstatusBadge(boletoData!.estatus).text}</BadgeText>
+                    </Badge>
+                  </VStack>
                 </HStack>
               </View>
 
